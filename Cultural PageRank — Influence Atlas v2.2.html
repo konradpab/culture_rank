@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cultural PageRank — Influence Atlas v2.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0907;--surface:#13110e;--surface2:#1c1915;--surface3:#242018;
+  --gold:#c9a84c;--gold-dim:#9a7b35;--gold-pale:#f0d98a;
+  --cream:#e8e0ce;--muted:#7a7060;--border:#2a2520;--border2:#38322a;
+  --lit:#7ab8d4;--phi:#9b8ec4;--film:#e07a5f;--art:#e4b363;
+  --music:#6dbf82;--non:#d4829a;--myth:#c49a6c;--custom:#a8d8a0;
+  --motif:#8ecfc9;--sphere:#c8a0d8;--danger:#c0504a;--info:#6ab0d4;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--cream);font-family:'Crimson Pro',Georgia,serif;font-size:17px;line-height:1.6;min-height:100vh}
+
+/* ─ HEADER ─ */
+header{border-bottom:1px solid var(--border);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(201,168,76,.07) 0%,transparent 70%);pointer-events:none}
+.header-inner{max-width:1320px;margin:0 auto;display:flex;align-items:flex-end;gap:2rem;flex-wrap:wrap}
+.eyebrow{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:.8rem}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3.6rem);font-weight:300;color:var(--cream);line-height:1.1;margin-bottom:.4rem}
+h1 span{color:var(--gold);font-style:italic}
+.subtitle{font-size:.95rem;color:var(--muted);font-weight:300;max-width:560px}
+.header-actions{display:flex;gap:.6rem;flex-shrink:0;flex-wrap:wrap;align-items:center}
+.version-badge{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.1em;color:var(--gold-dim);border:1px solid var(--border);padding:.2rem .5rem;margin-bottom:.5rem;display:inline-block}
+
+/* ─ BUTTONS ─ */
+.btn{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.55rem 1.1rem;border:1px solid;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem;background:none}
+.btn-primary{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.btn-primary:hover{background:var(--gold-pale);border-color:var(--gold-pale)}
+.btn-outline{color:var(--muted);border-color:var(--border2)}
+.btn-outline:hover{color:var(--gold-pale);border-color:var(--gold-dim)}
+.btn-graph{color:var(--motif);border-color:var(--motif)}
+.btn-graph:hover{background:rgba(142,207,201,.1)}
+.btn-danger{color:var(--danger);border-color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-sm{font-size:.5rem;padding:.3rem .6rem}
+.file-input-hidden{display:none}
+
+/* ─ TABS ─ */
+.view-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem}
+.view-tabs-inner{max-width:1320px;margin:0 auto;display:flex;gap:0}
+.tab-btn{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.85rem 1.4rem;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+.tab-btn.active{color:var(--gold-pale);border-bottom-color:var(--gold)}
+.tab-btn:hover:not(.active){color:var(--cream)}
+
+/* ─ FORMULA ─ */
+.formula-section{background:var(--surface);border-bottom:1px solid var(--border);padding:2rem}
+.formula-inner{max-width:1320px;margin:0 auto}
+.section-label{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:1.2rem}
+.formula-display{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,2.2vw,1.45rem);color:var(--cream);padding:1.2rem 1.8rem;border:1px solid var(--border);border-left:3px solid var(--gold);background:var(--surface2);line-height:2.2;margin-bottom:1.5rem}
+.formula-display .sym{color:var(--gold);font-weight:600}
+.formula-display .exp{font-size:.68em;vertical-align:super;color:var(--gold-pale)}
+.formula-note{font-family:'Space Mono',monospace;font-size:.52rem;color:var(--motif);border:1px solid rgba(142,207,201,.2);padding:.4rem .8rem;background:rgba(142,207,201,.04);margin-bottom:1rem}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.8rem}
+.metric-card{padding:.9rem 1.1rem;border:1px solid var(--border);background:var(--surface2);position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.metric-card.g::before{background:var(--music)}.metric-card.c::before{background:var(--film)}
+.metric-card.v::before{background:var(--lit)}.metric-card.i::before{background:var(--gold)}
+.metric-card.e::before{background:var(--phi)}
+.metric-symbol{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-style:italic;color:var(--gold);line-height:1;margin-bottom:.2rem}
+.metric-label{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
+.metric-desc{font-size:.78rem;color:var(--cream);opacity:.7}
+.metric-weight{font-family:'Space Mono',monospace;font-size:.52rem;color:var(--gold-dim);margin-top:.4rem}
+
+/* ─ CONTROLS ─ */
+.controls-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+.controls-inner{max-width:1320px;margin:0 auto;display:flex;flex-wrap:wrap;gap:.7rem;align-items:center}
+.search-box{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);color:var(--cream);font-family:'Crimson Pro',serif;font-size:.95rem;padding:.45rem .9rem;outline:none;transition:border-color .2s}
+.search-box:focus{border-color:var(--gold-dim)}
+.search-box::placeholder{color:var(--muted)}
+.filter-group{display:flex;flex-wrap:wrap;gap:.35rem}
+.filter-btn{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .65rem;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.filter-btn:hover,.filter-btn.active{color:var(--bg)}
+.filter-btn.active[data-f="all"]{background:var(--gold);border-color:var(--gold)}
+.filter-btn.active[data-f="myth"]{background:var(--myth);border-color:var(--myth)}
+.filter-btn.active[data-f="philosophy"]{background:var(--phi);border-color:var(--phi)}
+.filter-btn.active[data-f="literature"]{background:var(--lit);border-color:var(--lit)}
+.filter-btn.active[data-f="art"]{background:var(--art);border-color:var(--art)}
+.filter-btn.active[data-f="film"]{background:var(--film);border-color:var(--film)}
+.filter-btn.active[data-f="music"]{background:var(--music);border-color:var(--music)}
+.filter-btn.active[data-f="non-western"]{background:var(--non);border-color:var(--non)}
+.filter-btn.active[data-f="custom"]{background:var(--custom);border-color:var(--custom)}
+.sort-select{font-family:'Space Mono',monospace;font-size:.55rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:.3rem .6rem;cursor:pointer;outline:none}
+.count-display{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);margin-left:auto;white-space:nowrap}
+
+/* ─ STATS ─ */
+.stats-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:.7rem 2rem}
+.stats-inner{max-width:1320px;margin:0 auto;display:flex;gap:2rem;flex-wrap:wrap}
+.stat-item{display:flex;align-items:baseline;gap:.5rem}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-style:italic;color:var(--gold)}
+.stat-label{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.stat-item.graph .stat-num{color:var(--motif)}
+
+/* ─ MAIN ─ */
+main{max-width:1320px;margin:0 auto;padding:1.5rem 2rem 4rem}
+.view-section{display:none}
+.view-section.active{display:block}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
+
+/* ─ WORK CARD ─ */
+.work-card{background:var(--surface);border:1px solid var(--border);padding:1.2rem 1.3rem 1rem;position:relative;cursor:pointer;transition:border-color .15s,transform .15s;overflow:hidden}
+.work-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.work-card::after{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}
+.work-card[data-domain="literature"]::after{background:var(--lit)}
+.work-card[data-domain="philosophy"]::after{background:var(--phi)}
+.work-card[data-domain="film"]::after{background:var(--film)}
+.work-card[data-domain="art"]::after{background:var(--art)}
+.work-card[data-domain="music"]::after{background:var(--music)}
+.work-card[data-domain="myth"]::after{background:var(--myth)}
+.work-card[data-domain="non-western"]::after{background:var(--non)}
+.work-card[data-custom="true"]::after{background:var(--custom)}
+.work-card.tier0{background:linear-gradient(135deg,var(--surface) 0%,rgba(201,168,76,.04) 100%);border-color:rgba(201,168,76,.2)}
+.work-card[data-custom="true"]{border-color:rgba(168,216,160,.2)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;gap:.5rem}
+.card-top-left{display:flex;flex-direction:column;gap:.3rem}
+.card-domain-tag{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .45rem;border:1px solid;display:inline-block}
+[data-domain="literature"] .card-domain-tag{color:var(--lit);border-color:var(--lit);background:rgba(122,184,212,.08)}
+[data-domain="philosophy"] .card-domain-tag{color:var(--phi);border-color:var(--phi);background:rgba(155,142,196,.08)}
+[data-domain="film"] .card-domain-tag{color:var(--film);border-color:var(--film);background:rgba(224,122,95,.08)}
+[data-domain="art"] .card-domain-tag{color:var(--art);border-color:var(--art);background:rgba(228,179,99,.08)}
+[data-domain="music"] .card-domain-tag{color:var(--music);border-color:var(--music);background:rgba(109,191,130,.08)}
+[data-domain="myth"] .card-domain-tag{color:var(--myth);border-color:var(--myth);background:rgba(196,154,108,.08)}
+[data-domain="non-western"] .card-domain-tag{color:var(--non);border-color:var(--non);background:rgba(212,130,154,.08)}
+[data-custom="true"] .card-domain-tag{color:var(--custom);border-color:var(--custom);background:rgba(168,216,160,.08)}
+.custom-badge{font-family:'Space Mono',monospace;font-size:.45rem;letter-spacing:.08em;color:var(--custom);opacity:.7}
+.cis-block{text-align:right}
+.cis-score{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:var(--gold);line-height:1}
+.cis-auto-badge{font-family:'Space Mono',monospace;font-size:.4rem;color:var(--motif);letter-spacing:.06em}
+.work-card.tier0 .cis-score{color:var(--gold-pale)}
+.cis-label{font-family:'Space Mono',monospace;font-size:.42rem;color:var(--muted);text-align:right;letter-spacing:.08em;text-transform:uppercase}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--cream);line-height:1.2;margin-bottom:.12rem}
+.card-creator{font-family:'Crimson Pro',serif;font-size:.82rem;color:var(--muted);font-style:italic;margin-bottom:.6rem}
+.card-thesis{font-size:.85rem;color:var(--cream);opacity:.7;line-height:1.5;margin-bottom:.8rem}
+.score-bars{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem}
+.score-row{display:flex;align-items:center;gap:.45rem}
+.score-key{font-family:'Space Mono',monospace;font-size:.48rem;color:var(--muted);width:1.1rem;flex-shrink:0}
+.score-bar-bg{flex:1;height:3px;background:var(--border);position:relative}
+.score-bar-fill{position:absolute;left:0;top:0;bottom:0;transition:width .4s ease}
+.score-val{font-family:'Space Mono',monospace;font-size:.48rem;color:var(--muted);width:.9rem;text-align:right;flex-shrink:0}
+.motif-row{display:flex;flex-wrap:wrap;gap:.28rem}
+.motif-chip{font-family:'Space Mono',monospace;font-size:.47rem;letter-spacing:.04em;color:var(--muted);border:1px solid var(--border);padding:.12rem .35rem}
+.edge-count-badge{font-family:'Space Mono',monospace;font-size:.45rem;color:var(--motif);border:1px solid rgba(142,207,201,.25);padding:.1rem .3rem;margin-left:auto}
+
+/* ─ CARD DETAIL ─ */
+.card-detail{display:none;margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--border)}
+.card-detail.open{display:block}
+.detail-section{margin-bottom:.75rem}
+.detail-label{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:.25rem}
+.detail-text{font-size:.82rem;color:var(--cream);opacity:.72;line-height:1.5}
+.lineage-row{display:flex;gap:.8rem}
+.lineage-col{flex:1}
+.lineage-col-label{font-family:'Space Mono',monospace;font-size:.46rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem}
+.lineage-col-content{color:var(--cream);opacity:.68;font-size:.8rem;line-height:1.5}
+.sphere-tags{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.25rem}
+.sphere-tag{font-family:'Space Mono',monospace;font-size:.45rem;letter-spacing:.04em;color:var(--gold-dim);border:1px solid rgba(201,168,76,.2);padding:.12rem .35rem;background:rgba(201,168,76,.04)}
+/* identifiers panel */
+.ids-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.4rem;margin-top:.4rem}
+.id-item{font-family:'Space Mono',monospace;font-size:.46rem;display:flex;flex-direction:column;gap:.1rem}
+.id-key{color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.id-val{color:var(--motif)}
+.id-val a{color:var(--motif);text-decoration:none}
+.id-val a:hover{text-decoration:underline}
+/* edges panel */
+.edges-list{display:flex;flex-direction:column;gap:.4rem;margin-top:.4rem}
+.edge-item{font-size:.78rem;padding:.45rem .6rem;border:1px solid var(--border);background:var(--surface2);display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+.edge-type-badge{font-family:'Space Mono',monospace;font-size:.44rem;letter-spacing:.06em;padding:.1rem .3rem;border:1px solid}
+.edge-item.out .edge-type-badge{color:var(--film);border-color:var(--film)}
+.edge-item.in .edge-type-badge{color:var(--motif);border-color:var(--motif)}
+.edge-target{color:var(--cream);opacity:.8;flex:1}
+.edge-evidence{font-family:'Space Mono',monospace;font-size:.42rem;color:var(--muted)}
+.edge-conf{font-family:'Space Mono',monospace;font-size:.42rem}
+.card-actions{display:flex;gap:.5rem;margin-top:.9rem;padding-top:.7rem;border-top:1px solid var(--border);flex-wrap:wrap}
+
+/* ─ GRAPH VIEW ─ */
+.graph-canvas-wrap{width:100%;height:70vh;min-height:500px;background:var(--surface);border:1px solid var(--border);position:relative;overflow:hidden}
+#graphCanvas{width:100%;height:100%;display:block}
+.graph-legend{display:flex;flex-wrap:wrap;gap:.8rem;margin-bottom:1rem}
+.graph-controls{display:flex;gap:.6rem;margin-bottom:1rem;align-items:center;flex-wrap:wrap}
+.graph-info{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);margin-left:auto}
+.legend-item{display:flex;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;font-size:.5rem;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.graph-tooltip{position:absolute;background:var(--surface2);border:1px solid var(--border2);padding:.5rem .8rem;font-family:'Space Mono',monospace;font-size:.52rem;color:var(--cream);pointer-events:none;display:none;max-width:220px;z-index:10;line-height:1.5}
+/* table view */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dim);border-bottom:1px solid var(--border);padding:.5rem .8rem;text-align:left;white-space:nowrap}
+td{border-bottom:1px solid var(--border);padding:.5rem .8rem;color:var(--cream);opacity:.85;vertical-align:top}
+tr:hover td{background:var(--surface)}
+.td-cis{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;color:var(--gold)}
+.td-domain{font-family:'Space Mono',monospace;font-size:.44rem;letter-spacing:.06em;text-transform:uppercase}
+.td-era{font-family:'Space Mono',monospace;font-size:.55rem}
+.td-edges{font-family:'Space Mono',monospace;font-size:.52rem;color:var(--motif)}
+
+/* ─ MODAL ─ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,4,3,.9);z-index:1000;overflow-y:auto;padding:2rem 1rem}
+.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:var(--surface);border:1px solid var(--border2);width:100%;max-width:780px;position:relative;padding:2rem}
+.modal-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.8rem;border-bottom:1px solid var(--border);padding-bottom:1rem}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;color:var(--cream)}
+.modal-title span{color:var(--gold);font-style:italic}
+.modal-close{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);cursor:pointer;background:none;border:none;letter-spacing:.1em}
+.modal-close:hover{color:var(--cream)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-group{display:flex;flex-direction:column;gap:.3rem}
+.form-group.full{grid-column:1/-1}
+.form-label{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim)}
+.form-label sub{color:var(--muted);font-size:.45rem;text-transform:none;letter-spacing:0}
+.form-input,.form-select,.form-textarea{background:var(--surface2);border:1px solid var(--border);color:var(--cream);font-family:'Crimson Pro',serif;font-size:.95rem;padding:.5rem .75rem;outline:none;width:100%;transition:border-color .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold-dim)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--muted);font-style:italic}
+.form-textarea{resize:vertical;min-height:70px;line-height:1.5}
+.form-select{cursor:pointer}
+.section-divider{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold-dim);margin:1.5rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);grid-column:1/-1}
+.section-divider.motif-color{color:var(--motif);border-color:rgba(142,207,201,.2)}
+.ids-form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem}
+.score-sliders{display:grid;grid-template-columns:repeat(5,1fr);gap:.8rem}
+.slider-group{display:flex;flex-direction:column;gap:.3rem;align-items:center}
+.slider-label{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.1em;color:var(--muted);text-align:center}
+.slider-val{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-style:italic;color:var(--gold);line-height:1}
+.slider{-webkit-appearance:none;width:100%;height:4px;background:var(--border);outline:none;border-radius:0}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;cursor:pointer}
+.slider.g::-webkit-slider-thumb{background:var(--music)}
+.slider.c::-webkit-slider-thumb{background:var(--film)}
+.slider.v::-webkit-slider-thumb{background:var(--lit)}
+.slider.i::-webkit-slider-thumb{background:var(--gold)}
+.slider.e::-webkit-slider-thumb{background:var(--phi)}
+.slider-desc{font-family:'Space Mono',monospace;font-size:.45rem;color:var(--muted);text-align:center;line-height:1.4;margin-top:.1rem}
+.cis-preview{text-align:center;padding:1rem;border:1px solid var(--border);background:var(--surface2);margin-top:.5rem}
+.cis-preview-score{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-style:italic;color:var(--gold);line-height:1}
+.cis-preview-label{font-family:'Space Mono',monospace;font-size:.52rem;color:var(--muted);letter-spacing:.1em;margin-top:.2rem}
+.form-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)}
+/* edge modal */
+.edge-search-result{padding:.4rem .6rem;cursor:pointer;font-size:.85rem;border-bottom:1px solid var(--border)}
+.edge-search-result:hover{background:var(--surface2)}
+.edge-search-results{max-height:180px;overflow-y:auto;border:1px solid var(--border);background:var(--surface)}
+
+/* ─ TOAST ─ */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border2);border-left:3px solid var(--gold);padding:.75rem 1.2rem;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.08em;color:var(--cream);z-index:2000;opacity:0;transform:translateY(10px);transition:all .25s;max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-left-color:var(--music)}
+.toast.error{border-left-color:var(--danger)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div style="flex:1;min-width:300px">
+      <div class="eyebrow">Cultural Bibliometrics Project — Influence Atlas</div>
+      <div class="version-badge">v2.1 — Graph Edition</div>
+      <h1>Cultural <span>PageRank</span></h1>
+      <p class="subtitle">A living graph database of cultural influence. Works are nodes; influence is edges with provenance.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" id="addWorkBtn">＋ Add Work</button>
+      <button class="btn btn-graph" id="addEdgeBtn">⟶ Add Edge</button>
+      <button class="btn btn-outline" id="exportBtn">↓ Export v2.1</button>
+      <label class="btn btn-outline">↑ Import<input type="file" class="file-input-hidden" id="importInput" accept=".json"></label>
+    </div>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item"><span class="stat-num" id="statTotal">—</span><span class="stat-label">Works</span></div>
+    <div class="stat-item"><span class="stat-num" id="statCustom">0</span><span class="stat-label">Added</span></div>
+    <div class="stat-item graph"><span class="stat-num" id="statEdges">0</span><span class="stat-label">Edges</span></div>
+    <div class="stat-item graph"><span class="stat-num" id="statMotifs">0</span><span class="stat-label">Motif Nodes</span></div>
+    <div class="stat-item"><span class="stat-num" id="statTopScore">—</span><span class="stat-label">Highest CIS</span></div>
+    <div class="stat-item"><span class="stat-num" id="statPRDone" style="font-size:.8rem;color:var(--muted)">—</span><span class="stat-label">PageRank</span></div>
+  </div>
+</div>
+
+<div class="view-tabs">
+  <div class="view-tabs-inner">
+    <button class="tab-btn active" data-view="cards">Cards</button>
+    <button class="tab-btn" data-view="table">Table</button>
+    <button class="tab-btn" data-view="graph">Graph</button>
+    <button class="tab-btn" data-view="formula">Algorithm</button>
+  </div>
+</div>
+
+<div class="controls-bar">
+  <div class="controls-inner">
+    <input type="text" class="search-box" id="searchInput" placeholder="Search title, creator, motifs…">
+    <div class="filter-group">
+      <button class="filter-btn active" data-f="all">All</button>
+      <button class="filter-btn" data-f="myth">Myth</button>
+      <button class="filter-btn" data-f="philosophy">Philosophy</button>
+      <button class="filter-btn" data-f="literature">Literature</button>
+      <button class="filter-btn" data-f="art">Art</button>
+      <button class="filter-btn" data-f="film">Film</button>
+      <button class="filter-btn" data-f="music">Music</button>
+      <button class="filter-btn" data-f="non-western">Non-Western</button>
+      <button class="filter-btn" data-f="custom" id="customFilterBtn" style="display:none">★ Added</button>
+    </div>
+    <select class="sort-select" id="sortSelect">
+      <option value="cis">CIS Score ↓</option>
+      <option value="pagerank">PageRank ↓</option>
+      <option value="edges">Most Edges ↓</option>
+      <option value="alpha">A–Z</option>
+      <option value="era">Era (oldest)</option>
+    </select>
+    <div class="count-display" id="countDisplay">—</div>
+  </div>
+</div>
+
+<main>
+  <!-- CARDS VIEW -->
+  <div class="view-section active" id="view-cards">
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div class="view-section" id="view-table">
+    <div class="table-wrap"><table id="workTable">
+      <thead><tr>
+        <th>Title</th><th>Creator</th><th>Domain</th><th>Era</th>
+        <th>CIS</th><th>G</th><th>C</th><th>V</th><th>I</th><th>E</th>
+        <th>Edges</th><th>PR Rank</th><th>Wikidata</th>
+      </tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- GRAPH VIEW -->
+  <div class="view-section" id="view-graph">
+    <div class="graph-controls">
+      <div class="graph-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--lit)"></div>Literature</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--phi)"></div>Philosophy</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--film)"></div>Film</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--art)"></div>Art</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--music)"></div>Music</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--myth)"></div>Myth</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--non)"></div>Non-Western</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--motif)"></div>Motif node</div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="btnRelayout">Relayout</button>
+      <button class="btn btn-outline btn-sm" id="btnWorksOnly">Works Only</button>
+      <button class="btn btn-outline btn-sm" id="btnShowMotifs">+ Motifs</button>
+      <div class="graph-info" id="graphInfo">Drag to pan · Scroll to zoom · Click node for details</div>
+    </div>
+    <div class="graph-canvas-wrap">
+      <canvas id="graphCanvas"></canvas>
+      <div class="graph-tooltip" id="graphTooltip"></div>
+    </div>
+  </div>
+
+  <!-- FORMULA VIEW -->
+  <div class="view-section" id="view-formula">
+    <div class="formula-inner" style="padding-top:1.5rem">
+      <div class="section-label">§ 1 — CIS Algorithm: Cultural Impact Score</div>
+      <div class="formula-display">
+        <span class="sym">CIS</span> = (<span class="sym">G</span> × 1.5) + (<span class="sym">C</span><span class="exp">1.8</span>) + (<span class="sym">V</span> × 1.2) + (<span class="sym">I</span> × 2.0) + (<span class="sym">E</span> × 1.5)
+      </div>
+      <div class="formula-note">🔗 v2.1 upgrade: I can be auto-derived from the edge graph via PageRank. When edges exist, I_auto is computed and displayed alongside the manual score. Final I = max(I_manual, I_auto).</div>
+      <div class="metrics-grid">
+        <div class="metric-card g"><div class="metric-symbol">G</div><div class="metric-label">Generativity</div><div class="metric-desc">Derivative works, adaptations, genre formations.</div><div class="metric-weight">×1.5</div></div>
+        <div class="metric-card c"><div class="metric-symbol">C</div><div class="metric-label">Cross-Domain</div><div class="metric-desc">Influence jumps across domains: lit → law → film.</div><div class="metric-weight">C^1.8 (exponential)</div></div>
+        <div class="metric-card v"><div class="metric-symbol">V</div><div class="metric-label">Velocity</div><div class="metric-desc">Speed of infiltration into cultural vocabulary.</div><div class="metric-weight">×1.2</div></div>
+        <div class="metric-card i"><div class="metric-symbol">I</div><div class="metric-label">Intertextual</div><div class="metric-desc">Referenced by other high-CIS nodes. The PageRank dimension.</div><div class="metric-weight">×2.0 (highest)</div></div>
+        <div class="metric-card e"><div class="metric-symbol">E</div><div class="metric-label">Institutional</div><div class="metric-desc">Curricula, legal systems, UNESCO registers.</div><div class="metric-weight">×1.5</div></div>
+      </div>
+      <div class="section-label" style="margin-top:2rem">§ 2 — Edge Types (v2.1 Graph Schema)</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.6rem;margin-top:.5rem" id="edgeTypeList"></div>
+      <div class="section-label" style="margin-top:2rem">§ 3 — External Identifier Schema</div>
+      <div style="font-size:.85rem;color:var(--cream);opacity:.7;max-width:720px;line-height:1.7">
+        Works carry authority-control identifiers enabling cross-archive linking. Canonical ID rule: <span style="color:var(--motif)">ids.wikidata</span> if present, else the internal <span style="color:var(--motif)">id</span>, else a hash of {title, creator, era}. Supported registries: Wikidata, VIAF, ISNI, LCCN, IMDb, MusicBrainz, ISRC, ISWC, GeoNames, ROR, Getty AAT/TGN/ULAN.
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ADD WORK MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add <span>Work</span></div>
+      <button class="modal-close" id="closeModal">✕ Close</button>
+    </div>
+    <div class="form-grid">
+      <div class="section-divider">Core Information</div>
+      <div class="form-group full"><label class="form-label">Title <sub>*required</sub></label><input type="text" class="form-input" id="f-title" placeholder="e.g. The Symposium"></div>
+      <div class="form-group"><label class="form-label">Creator / Author <sub>*required</sub></label><input type="text" class="form-input" id="f-creator" placeholder="e.g. Plato, ~385 BCE"></div>
+      <div class="form-group"><label class="form-label">Domain <sub>*required</sub></label>
+        <select class="form-select" id="f-domain">
+          <option value="literature">Literature</option><option value="philosophy">Philosophy</option>
+          <option value="myth">Myth / Religion</option><option value="film">Film</option>
+          <option value="art">Visual Art</option><option value="music">Music</option>
+          <option value="non-western">Non-Western</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Era / Year <sub>negative = BCE</sub></label><input type="number" class="form-input" id="f-era" placeholder="-385 or 1605"></div>
+      <div class="form-group"><label class="form-label">Tier</label>
+        <select class="form-select" id="f-tier">
+          <option value="2">Tier 2 — Significant</option><option value="1">Tier 1 — Hub</option><option value="0">Tier 0 — Supernode</option>
+        </select>
+      </div>
+
+      <div class="section-divider">Description & Lineage</div>
+      <div class="form-group full"><label class="form-label">One-Sentence Thesis</label><textarea class="form-textarea" id="f-thesis" placeholder="What problem does this work solve in culture?"></textarea></div>
+      <div class="form-group full"><label class="form-label">Motifs <sub>comma-separated — reusable meme units</sub></label><input type="text" class="form-input" id="f-motifs" placeholder="The oracle, Tragic recognition, The hero's flaw"></div>
+      <div class="form-group full"><label class="form-label">Key Reference Hooks <sub>phrases / images that circulate</sub></label><input type="text" class="form-input" id="f-hooks" placeholder="Know thyself / The oracle / Oedipus complex"></div>
+      <div class="form-group"><label class="form-label">Parents <sub>what it synthesized</sub></label><textarea class="form-textarea" id="f-parents" placeholder="Homer, Athenian religious ritual, Aeschylus"></textarea></div>
+      <div class="form-group"><label class="form-label">Children <sub>what it spawned</sub></label><textarea class="form-textarea" id="f-children" placeholder="Aristotle's Poetics, Freud, all tragedy since"></textarea></div>
+      <div class="form-group full"><label class="form-label">Spheres of Influence <sub>comma-separated</sub></label><input type="text" class="form-input" id="f-spheres" placeholder="Literature, Psychology, Law, Theatre"></div>
+
+      <div class="section-divider motif-color">Authority Identifiers <sub style="color:var(--muted);font-size:.45rem;text-transform:none;letter-spacing:0"> — optional but enables graph linking</sub></div>
+      <div class="form-group full">
+        <div class="ids-form-grid">
+          <div class="form-group"><label class="form-label">Wikidata <sub>Q…</sub></label><input type="text" class="form-input" id="f-wikidata" placeholder="Q1234"></div>
+          <div class="form-group"><label class="form-label">VIAF</label><input type="text" class="form-input" id="f-viaf" placeholder="27864927"></div>
+          <div class="form-group"><label class="form-label">LCCN</label><input type="text" class="form-input" id="f-lccn" placeholder="n79066279"></div>
+          <div class="form-group"><label class="form-label">IMDb <sub>tt…</sub></label><input type="text" class="form-input" id="f-imdb" placeholder="tt0031381"></div>
+          <div class="form-group"><label class="form-label">MusicBrainz</label><input type="text" class="form-input" id="f-musicbrainz" placeholder="uuid"></div>
+          <div class="form-group"><label class="form-label">Getty AAT</label><input type="text" class="form-input" id="f-getty_aat" placeholder="300056462"></div>
+        </div>
+      </div>
+
+      <div class="section-divider">Score the Work <sub style="color:var(--muted)">1–10 per dimension</sub></div>
+      <div class="form-group full">
+        <div class="score-sliders">
+          <div class="slider-group"><div class="slider-label">G</div><div class="slider-val" id="sv-G">7</div><input type="range" class="slider g" id="sl-G" min="1" max="10" value="7"><div class="slider-desc">Generativity</div></div>
+          <div class="slider-group"><div class="slider-label">C</div><div class="slider-val" id="sv-C">7</div><input type="range" class="slider c" id="sl-C" min="1" max="10" value="7"><div class="slider-desc">Cross-Domain</div></div>
+          <div class="slider-group"><div class="slider-label">V</div><div class="slider-val" id="sv-V">7</div><input type="range" class="slider v" id="sl-V" min="1" max="10" value="7"><div class="slider-desc">Velocity</div></div>
+          <div class="slider-group"><div class="slider-label">I</div><div class="slider-val" id="sv-I">7</div><input type="range" class="slider i" id="sl-I" min="1" max="10" value="7"><div class="slider-desc">Intertextual</div></div>
+          <div class="slider-group"><div class="slider-label">E</div><div class="slider-val" id="sv-E">7</div><input type="range" class="slider e" id="sl-E" min="1" max="10" value="7"><div class="slider-desc">Institutional</div></div>
+        </div>
+        <div class="cis-preview" style="margin-top:1rem"><div class="cis-preview-score" id="cisPreview">—</div><div class="cis-preview-label">Projected CIS Score</div></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" id="cancelModal">Cancel</button>
+      <button class="btn btn-primary" id="saveWork">Save Work to Database</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EDGE MODAL -->
+<div class="modal-overlay" id="edgeModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">Add <span>Edge</span></div>
+      <button class="modal-close" id="closeEdgeModal">✕ Close</button>
+    </div>
+    <div class="form-grid">
+      <div class="section-divider">Source → Target</div>
+      <div class="form-group full">
+        <label class="form-label">From (source work)</label>
+        <input type="text" class="form-input" id="e-from-search" placeholder="Type to search works…" autocomplete="off">
+        <input type="hidden" id="e-from-id">
+        <div class="edge-search-results" id="e-from-results" style="display:none"></div>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">To (target work)</label>
+        <input type="text" class="form-input" id="e-to-search" placeholder="Type to search works…" autocomplete="off">
+        <input type="hidden" id="e-to-id">
+        <div class="edge-search-results" id="e-to-results" style="display:none"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Edge Type</label>
+        <select class="form-select" id="e-type">
+          <option value="INFLUENCED_BY">INFLUENCED_BY</option>
+          <option value="ADAPTATION_OF">ADAPTATION_OF</option>
+          <option value="QUOTES">QUOTES</option>
+          <option value="TRANSLATION_OF">TRANSLATION_OF</option>
+          <option value="SAMPLES">SAMPLES</option>
+          <option value="PARODIES">PARODIES</option>
+          <option value="SHARES_MOTIF">SHARES_MOTIF</option>
+          <option value="SHARES_TECHNIQUE">SHARES_TECHNIQUE</option>
+          <option value="TAUGHT_ALONGSIDE">TAUGHT_ALONGSIDE</option>
+        </select>
+      </div>
+      <div class="section-divider">Evidence Provenance</div>
+      <div class="form-group"><label class="form-label">Evidence Kind</label>
+        <select class="form-select" id="e-kind"><option value="curated">Curated (manual)</option><option value="explicit">Explicit (documented)</option><option value="inferred">Inferred</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Source</label>
+        <select class="form-select" id="e-source"><option value="manual">Manual / Personal</option><option value="wikidata">Wikidata</option><option value="imdb">IMDb</option><option value="opensyllabus">Open Syllabus</option><option value="catalog">Library Catalog</option><option value="paper">Academic Paper</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Source ID / URL</label><input type="text" class="form-input" id="e-source-id" placeholder="Q1234 / paper DOI / IMDb tt…"></div>
+      <div class="form-group"><label class="form-label">Confidence <span id="e-conf-val" style="color:var(--gold)">0.8</span></label><input type="range" class="slider i" id="e-conf" min="0" max="10" value="8" style="width:100%;margin-top:.3rem"></div>
+      <div class="form-group full"><label class="form-label">Note</label><input type="text" class="form-input" id="e-note" placeholder="e.g. Kurosawa cited Shakespeare explicitly in his memoir"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" id="cancelEdgeModal">Cancel</button>
+      <button class="btn btn-graph" id="saveEdge">Save Edge</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// BUILT-IN DATASET (105 works)
+// ══════════════════════════════════════════════════════════
+const BUILTIN_WORKS = [
+  {id:"b1",tier:0,title:"The Hebrew Bible / Tanakh",creator:"Multiple authors, compiled ~1200–165 BCE",domain:"myth",era:-1200,thesis:"Covenantal law, ethical monotheism, and linear historical time as a world-model engine for three civilizations.",G:10,C:10,V:9,I:10,E:10,motifs:["Covenant","Fall from grace","Exile & return","The prophet","Promised land","Sacrifice","The flood"],parents:"Mesopotamian mythology, Egyptian court literature, Canaanite poetry",children:"New Testament, Quran, Western legal tradition, Milton's Paradise Lost",spheres:["Law","Theology","Politics","Literature","Art","Music","Ethics","Education"],hooks:"In the beginning / Let there be light / An eye for an eye",ids:{}},
+  {id:"b2",tier:0,title:"Homer — Iliad & Odyssey",creator:"Homer (attributed), ~8th century BCE",domain:"myth",era:-800,thesis:"The DNA of Western heroism: glory, mortality, homecoming, and the tragedy of war.",G:10,C:10,V:9,I:10,E:10,motifs:["The hero's rage","War's duality","The journey home","Divine intervention","The wily hero","The faithful wife"],parents:"Oral Bronze Age tradition, Mycenaean mythology",children:"Virgil's Aeneid, Dante, Joyce's Ulysses, Derek Walcott",spheres:["Literature","War theory","Education","Philosophy","Film","Psychology"],hooks:"Sing O goddess the anger of Achilles / Nobody / The wine-dark sea",ids:{}},
+  {id:"b3",tier:0,title:"Plato — The Republic & Dialogues",creator:"Plato, ~428–348 BCE",domain:"philosophy",era:-380,thesis:"Invented the problems of the good, the real, and the just — all subsequent Western philosophy is a footnote.",G:10,C:10,V:8,I:10,E:10,motifs:["The Cave allegory","The philosopher-king","The ideal form","Justice as harmony","The examined life","Eros as ascent"],parents:"Socrates, Heraclitus, Parmenides, Pythagorean tradition",children:"Aristotle, Neoplatonism, Augustine, all Western philosophy, The Matrix",spheres:["Philosophy","Politics","Education","Theology","Mathematics","Literature","Film"],hooks:"The Allegory of the Cave / The unexamined life / The noble lie",ids:{wikidata:"Q52186895"}},
+  {id:"b4",tier:0,title:"The Mahabharata",creator:"Vyasa (attributed), compiled ~400 BCE–400 CE",domain:"myth",era:-400,thesis:"Encyclopedia of South Asian philosophy, dharma, and statecraft — contains the Bhagavad Gita.",G:10,C:10,V:8,I:9,E:10,motifs:["Dharma vs. desire","The reluctant warrior","Divine counsel","Family as war","Cosmic time cycles","Karma"],parents:"Vedic oral tradition, Upanishadic philosophy",children:"All Hindu devotional literature, Southeast Asian court epics, Gandhi's politics",spheres:["Religion","Philosophy","Law","Art","Theatre","Politics","Literature"],hooks:"I am become death / Act without attachment / The dice game",ids:{}},
+  {id:"b5",tier:0,title:"The Quran",creator:"Revealed to Muhammad, 610–632 CE; compiled 650 CE",domain:"myth",era:650,thesis:"Definitive linguistic and cosmological anchor for Islamic civilization.",G:10,C:10,V:10,I:9,E:10,motifs:["Divine address","The Day of Judgment","The Prophet as seal","Submission to God","Mercy and justice"],parents:"Torah, New Testament, Arabian oral poetry, Zoroastrian cosmology",children:"Islamic philosophy, Persian poetry, Islamic law, Sufi mysticism",spheres:["Theology","Law","Art","Architecture","Poetry","Education","Politics"],hooks:"Bismillah ir-rahman ir-rahim / Iqra (Read!)",ids:{}},
+  {id:"b6",tier:0,title:"Dante — The Divine Comedy",creator:"Dante Alighieri, 1308–1320",domain:"literature",era:1308,thesis:"Grand synthesis of classical antiquity and medieval Christianity; invented literary Italian.",G:10,C:9,V:8,I:10,E:10,motifs:["The guided journey","Moral geography","Love as cosmological force","The afterlife mapped","Justice as exact proportion"],parents:"Virgil, Aquinas, Aristotle, Provençal love poetry",children:"Milton, Blake, T.S. Eliot, Borges, Botticelli, Rodin",spheres:["Literature","Theology","Visual Art","Philosophy","Politics","Language"],hooks:"Abandon all hope ye who enter here / The love that moves the sun",ids:{}},
+  {id:"b7",tier:0,title:"Shakespeare — Hamlet & Key Plays",creator:"William Shakespeare, 1600–1613",domain:"literature",era:1600,thesis:"Invented modern psychological interiority. The English language's largest single vocabulary donor.",G:10,C:10,V:10,I:10,E:10,motifs:["To be or not to be","The play within the play","The ghost of obligation","Ambition's corruption","Jealousy as monster"],parents:"Holinshed's Chronicles, Plutarch, Ovid, Italian novella tradition",children:"The English novel, Freud's psychoanalysis, opera, Verdi, Kurosawa, Disney",spheres:["Literature","Psychology","Theatre","Film","Education","Language","Philosophy"],hooks:"To be or not to be / Et tu Brute / All the world's a stage",ids:{wikidata:"Q38361"}},
+  {id:"b8",tier:0,title:"Cervantes — Don Quixote",creator:"Miguel de Cervantes, 1605 & 1615",domain:"literature",era:1605,thesis:"The original novel and the original metafiction — inventing the unreliable narrator.",G:10,C:9,V:8,I:10,E:10,motifs:["The unreliable narrator","Windmills as giants","Idealism vs. reality","The sidekick foil","Genre parody"],parents:"Medieval romance tradition, Erasmus, Italian novella",children:"The entire novel form, Flaubert, Kafka, Borges, García Márquez",spheres:["Literature","Philosophy","Psychology","Film","Theatre","Education"],hooks:"Tilting at windmills / The knight of the sad countenance",ids:{}},
+  {id:"b9",tier:0,title:"Bach — The Well-Tempered Clavier & Mass in B Minor",creator:"Johann Sebastian Bach, 1685–1750",domain:"music",era:1722,thesis:"Codified equal temperament and counterpoint — the operating system of all subsequent Western music.",G:10,C:9,V:8,I:10,E:10,motifs:["Fugue as democracy of voices","Equal temperament","Counterpoint as conversation","Sacred and secular unity","Structural inevitability"],parents:"Buxtehude, Pachelbel, Lutheran chorale tradition, Italian concerto form",children:"Mozart, Beethoven, Brahms, Schoenberg, jazz harmony",spheres:["Music","Mathematics","Theology","Film","Education"],hooks:"The Well-Tempered Clavier / The Goldberg Variations",ids:{}},
+  {id:"b10",tier:0,title:"Epic of Gilgamesh",creator:"Multiple Mesopotamian scribes, ~2100–1200 BCE",domain:"myth",era:-2100,thesis:"Oldest surviving narrative: mortality, friendship, the flood, and the search for immortality.",G:9,C:9,V:7,I:9,E:8,motifs:["The flood myth","The search for immortality","The wild man tamed","Friendship as transformation","The descent to underworld"],parents:"Sumerian oral tradition",children:"Genesis flood narrative, Homer, all epic tradition, Campbell's hero's journey",spheres:["Literature","Religion","Anthropology","Archaeology","Psychology"],hooks:"He who saw the deep / The flood / Enkidu",ids:{}},
+  {id:"b11",tier:0,title:"Aristotle — Poetics, Ethics, Politics",creator:"Aristotle, 384–322 BCE",domain:"philosophy",era:-350,thesis:"Defined plot, character, catharsis, virtue, the state — the logical vocabulary of Western thought for 2000 years.",G:10,C:10,V:8,I:10,E:10,motifs:["The golden mean","Catharsis","The four causes","Virtue as habit","The political animal","Mimesis"],parents:"Plato, Heraclitus, pre-Socratic tradition",children:"Aquinas, Scholasticism, the Scientific Revolution, modern narrative theory",spheres:["Philosophy","Science","Politics","Literature","Theatre","Ethics","Education"],hooks:"The whole is greater than the sum / Pity and fear / Man is a political animal",ids:{}},
+  {id:"b12",tier:0,title:"Citizen Kane",creator:"Orson Welles, 1941",domain:"film",era:1941,thesis:"Codified modern film language: deep focus, non-linear narrative, the unreliable narrator in cinema.",G:9,C:8,V:9,I:10,E:10,motifs:["Rosebud","The unreliable narrator","Non-linear biography","Power corrupts","Deep focus photography"],parents:"German Expressionism, John Ford westerns, Shakespearean tragedy",children:"Every non-linear film, Godard, Scorsese, Paul Thomas Anderson",spheres:["Film","Literature","Photography","Politics","Journalism"],hooks:"Rosebud / Deep focus / The breakfast scene",ids:{imdb:"tt0033467"}},
+  {id:"b13",tier:1,title:"The New Testament",creator:"Multiple authors, ~50–100 CE",domain:"myth",era:70,thesis:"Narrative ethics and sacrificial theology that became the world's largest institutional religion.",G:10,C:10,V:10,I:9,E:10,motifs:["Death and resurrection","The sermon on the mount","Parable as teaching","Forgiveness as revolution","The apocalypse"],parents:"Hebrew Bible, Greek philosophy, Second Temple Judaism",children:"Western art canon, Christmas and Easter music, liberation theology, Gothic architecture",spheres:["Theology","Art","Music","Law","Politics","Literature","Architecture"],hooks:"Love thy neighbor / The meek shall inherit the earth",ids:{}},
+  {id:"b14",tier:1,title:"The Ramayana",creator:"Valmiki (attributed), ~500 BCE–200 CE",domain:"myth",era:-300,thesis:"Blueprint for ideal rulership, duty, and exile — the ritual and devotional spine of South and Southeast Asian culture.",G:9,C:9,V:8,I:8,E:9,motifs:["The ideal king","The devoted wife","Hanuman the loyal servant","The demon king","Exile as trial"],parents:"Vedic tradition, oral heroic poetry",children:"Thai Ramakien, Indonesian Ramayana ballet, Bollywood, Diwali",spheres:["Religion","Theatre","Literature","Politics","Dance","Visual Art"],hooks:"Ram Ram / Hanuman's leap / The abduction of Sita",ids:{}},
+  {id:"b15",tier:1,title:"Ovid — Metamorphoses",creator:"Publius Ovidius Naso, ~8 CE",domain:"literature",era:8,thesis:"The encyclopedia of classical myth in narrative form — the primary source for Renaissance visual art.",G:9,C:10,V:7,I:9,E:8,motifs:["Transformation as truth","The suffering of love","Gods as abusers","Art defeating death"],parents:"Greek mythology, Hesiod, Callimachus",children:"Botticelli, Bernini, Titian, Rubens, Shakespeare, Keats, Ted Hughes",spheres:["Literature","Visual Art","Sculpture","Psychology","Education"],hooks:"Narcissus / Orpheus and Eurydice / Pygmalion / Midas",ids:{}},
+  {id:"b16",tier:1,title:"Virgil — The Aeneid",creator:"Virgil, 29–19 BCE",domain:"literature",era:-20,thesis:"Empire as divine destiny — the political myth of Rome that justified every imperial succession claim.",G:8,C:9,V:7,I:9,E:9,motifs:["Destiny over individual will","Piety as heroism","The founding father","The underworld prophecy"],parents:"Homer, Greek tragedy, Alexandrian poetry",children:"Dante (Virgil as guide), Medieval Latin poetry, Renaissance epic, Milton",spheres:["Literature","Politics","Theology","Education","Philosophy"],hooks:"Arma virumque cano / Arms and the man / Dido's lament",ids:{}},
+  {id:"b17",tier:1,title:"Confucian Analects",creator:"Confucius / disciples, ~500–200 BCE",domain:"philosophy",era:-400,thesis:"Social harmony through ritual, hierarchy, and self-cultivation — the operating system of East Asian state and family.",G:9,C:9,V:7,I:8,E:10,motifs:["Ren (benevolence)","The superior man","Ritual propriety","Rectification of names","Filial piety"],parents:"Zhou dynasty rites, earlier sage traditions",children:"Neo-Confucianism, the imperial examination system, Korean and Japanese court culture",spheres:["Politics","Education","Ethics","Law","Family structure","Literature"],hooks:"Do not do to others / Study without thought is labor lost",ids:{}},
+  {id:"b18",tier:1,title:"Dao De Jing",creator:"Laozi (attributed), ~600–400 BCE",domain:"philosophy",era:-500,thesis:"The most translated philosophical text after the Bible — wu wei, the Tao, emptiness as cosmological principles.",G:8,C:9,V:6,I:8,E:7,motifs:["The unnamed Tao","Wu wei (non-action)","Water as power","Emptiness as utility","The uncarved block"],parents:"Earlier Chinese cosmological thought",children:"Zhuangzi, Chan/Zen Buddhism, Chinese aesthetics, Beat poetry, eco-philosophy",spheres:["Philosophy","Religion","Science","Art","Politics","Ecology"],hooks:"The Tao that can be named is not the eternal Tao / Wu wei",ids:{}},
+  {id:"b19",tier:1,title:"One Thousand and One Nights",creator:"Multiple authors, compiled ~9th–14th century CE",domain:"literature",era:1000,thesis:"The frame narrative as survival technology — stories within stories, the storyteller who speaks to live.",G:9,C:9,V:7,I:8,E:7,motifs:["The frame narrative","Stories within stories","The cliffhanger","The clever underdog","The djinn's bargain"],parents:"Persian Hezar Afsanah, Indian Panchatantra, oral folk traditions",children:"Boccaccio, Chaucer, the English novel, Borges, García Márquez, Rushdie",spheres:["Literature","Theatre","Film","Psychology","Feminist theory","Oral tradition"],hooks:"Open sesame / Aladdin / Sinbad / Scheherazade's first night",ids:{}},
+  {id:"b20",tier:1,title:"Goethe — Faust",creator:"Johann Wolfgang von Goethe, 1808 & 1832",domain:"literature",era:1808,thesis:"The bargain with the devil as modernity's central myth — knowledge, desire, progress, and damnation.",G:9,C:9,V:8,I:9,E:9,motifs:["The Faustian bargain","Striving without end","The eternal feminine","Knowledge as transgression"],parents:"The Faust legend, Marlowe's Faustus, Shakespeare",children:"Berlioz, Thomas Mann's Doctor Faustus, Blues mythology, all deal-with-devil narratives",spheres:["Literature","Music","Philosophy","Theatre","Psychology","Theology"],hooks:"The moment to which I say: stay a while / Das Ewig-Weibliche",ids:{}},
+  {id:"b21",tier:1,title:"Milton — Paradise Lost",creator:"John Milton, 1667",domain:"literature",era:1667,thesis:"Satan as the first Romantic anti-hero, and the permanent link between beauty and transgression.",G:8,C:8,V:7,I:9,E:9,motifs:["Better to reign in hell","The fallen angel","Heroic ambition as sin","Free will vs. predestination"],parents:"Homer, Virgil, Genesis, Dante, Spenser",children:"Romantic poetry (Blake, Shelley), Frankenstein, His Dark Materials",spheres:["Literature","Theology","Philosophy","Poetry","Political thought"],hooks:"Better to reign in Hell than serve in Heaven",ids:{}},
+  {id:"b22",tier:1,title:"Dostoevsky — The Brothers Karamazov",creator:"Fyodor Dostoevsky, 1880",domain:"literature",era:1880,thesis:"The most intense novel about God, doubt, free will, and suffering — Freud called it the greatest novel ever written.",G:8,C:9,V:7,I:9,E:8,motifs:["The Grand Inquisitor","God and free will","Brothers and murder","The holy fool","Suffering as redemption"],parents:"Pushkin, Dickens, Shakespeare, Schiller, the New Testament",children:"Existentialism, 20th century novel, crime fiction, Kafka",spheres:["Literature","Philosophy","Theology","Psychology","Politics"],hooks:"If God does not exist everything is permitted / I give back my ticket",ids:{}},
+  {id:"b23",tier:1,title:"Tolstoy — War and Peace",creator:"Leo Tolstoy, 1869",domain:"literature",era:1869,thesis:"The novel as total historical form — life, death, love, war, and history's indifference to individual heroism.",G:8,C:8,V:7,I:8,E:9,motifs:["History vs. individual","The battle fog of war","Aristocratic decline","The sky at Austerlitz"],parents:"Stendhal, Homer, the Napoleonic chronicles",children:"The social novel, García Márquez, European literary realism",spheres:["Literature","History","Philosophy","Politics","War studies"],hooks:"Happy families are all alike / The sky at Austerlitz",ids:{}},
+  {id:"b24",tier:1,title:"Kafka — The Trial & Metamorphosis",creator:"Franz Kafka, 1915–1925",domain:"literature",era:1915,thesis:"Invented the grammar of modern anxiety and institutional alienation — Kafkaesque entered every language.",G:8,C:9,V:6,I:9,E:8,motifs:["The unexplained accusation","The bureaucratic labyrinth","The body as trap","Guilt without crime"],parents:"Flaubert, Dickens, Kierkegaard, Jewish legal tradition",children:"Existentialism, Beckett, The Matrix, all dystopian fiction, Pynchon",spheres:["Literature","Philosophy","Law","Psychology","Film","Political theory"],hooks:"Kafkaesque / Someone must have slandered Josef K. / Gregor Samsa",ids:{}},
+  {id:"b25",tier:1,title:"Marx — Capital & The Communist Manifesto",creator:"Karl Marx & Friedrich Engels, 1848–1867",domain:"philosophy",era:1848,thesis:"Class, labor, and capital as the engine of history — shaped the politics of the 20th century.",G:9,C:10,V:9,I:9,E:8,motifs:["Workers of the world unite","Alienated labor","The commodity fetish","Base and superstructure"],parents:"Hegel, Ricardo, Adam Smith, French Revolution",children:"Leninism, Maoism, Frankfurt School, postcolonial theory, labor movements",spheres:["Politics","Economics","Philosophy","Sociology","Literature","History"],hooks:"Workers of the world unite / Religion is the opium of the people",ids:{}},
+  {id:"b26",tier:1,title:"Nietzsche — Thus Spoke Zarathustra",creator:"Friedrich Nietzsche, 1883–1886",domain:"philosophy",era:1883,thesis:"God is dead, will to power, the Übermensch — the most dangerous and generative philosophical corpus of modernity.",G:9,C:10,V:7,I:10,E:7,motifs:["God is dead","Will to power","The Übermensch","Eternal recurrence","Slave morality","Perspectivism"],parents:"Schopenhauer, Greek tragedy, Wagner",children:"Existentialism, Foucault, Derrida, postmodernism, Mann, Yeats, Bowie",spheres:["Philosophy","Politics","Literature","Psychology","Art","Cultural criticism"],hooks:"God is dead / What doesn't kill me / Become who you are / Amor fati",ids:{}},
+  {id:"b27",tier:1,title:"Freud — The Interpretation of Dreams",creator:"Sigmund Freud, 1899–1930",domain:"philosophy",era:1900,thesis:"Invented the vocabulary of the unconscious — id, ego, superego, repression.",G:9,C:10,V:8,I:9,E:8,motifs:["The unconscious","Dream as wish fulfillment","The Oedipus complex","Repression","The talking cure","The death drive"],parents:"Darwin, Nietzsche, Charcot, classical mythology",children:"Psychoanalysis, surrealism, modern novel, advertising, film theory, feminist theory",spheres:["Psychology","Literature","Art","Film","Sociology","Anthropology","Medicine"],hooks:"The uncanny / Id ego superego / Freudian slip / Oedipus complex",ids:{}},
+  {id:"b28",tier:1,title:"Augustine — Confessions & City of God",creator:"Augustine of Hippo, 397–426 CE",domain:"philosophy",era:400,thesis:"Invented the confessional self-narrative and synthesized Christianity with Platonic philosophy.",G:8,C:9,V:7,I:9,E:9,motifs:["Our heart is restless","Original sin","Two cities","The will divided against itself","Memory as self"],parents:"Plato, Paul's letters, Cicero, Manichaean cosmology",children:"Medieval theology, Reformation, Calvinist predestination, Western autobiography, Rousseau",spheres:["Theology","Philosophy","Literature","Politics","Education","Ethics"],hooks:"Our heart is restless until it rests in Thee / Lord make me chaste but not yet",ids:{}},
+  {id:"b29",tier:1,title:"Kant — Critique of Pure Reason",creator:"Immanuel Kant, 1781–1788",domain:"philosophy",era:1781,thesis:"The Copernican revolution in philosophy — the mind structures experience, not the reverse.",G:8,C:9,V:6,I:9,E:9,motifs:["The thing-in-itself","Space and time as mental forms","The categorical imperative","Transcendental idealism"],parents:"Hume, Leibniz, Descartes, Rousseau",children:"German Idealism (Hegel), analytic philosophy, phenomenology, Rawls, international law",spheres:["Philosophy","Ethics","Science","Law","Politics","Aesthetics"],hooks:"Two things fill me with awe / Act only according to that maxim / Sapere aude",ids:{}},
+  {id:"b30",tier:1,title:"Hegel — Phenomenology of Spirit",creator:"Georg Wilhelm Friedrich Hegel, 1807",domain:"philosophy",era:1807,thesis:"The dialectic and the idea that history is the unfolding of Geist.",G:8,C:9,V:6,I:9,E:8,motifs:["The dialectic","Master-slave dynamic","Spirit coming to know itself","The Absolute","History as progress"],parents:"Kant, Greek philosophy, Christian theology",children:"Marx, Frankfurt School, Existentialism, French theory, Fukuyama",spheres:["Philosophy","Politics","History","Art criticism","Theology","Economics"],hooks:"The owl of Minerva / Master-slave dialectic / The cunning of reason",ids:{}},
+  {id:"b31",tier:1,title:"Machiavelli — The Prince",creator:"Niccolò Machiavelli, 1513",domain:"philosophy",era:1513,thesis:"Realism in power — the first secular treatise on statecraft, separating morality from political effectiveness.",G:8,C:9,V:7,I:8,E:7,motifs:["The ends justify the means","Fortune as a river","The lion and the fox","Virtù vs. Fortune","Realpolitik"],parents:"Thucydides, Livy, Roman history, Florentine civic humanism",children:"Modern political science, international relations realism, Shakespeare's villains",spheres:["Politics","Philosophy","History","Literature","Business strategy"],hooks:"Better to be feared than loved / The ends justify the means",ids:{}},
+  {id:"b32",tier:1,title:"Eisenstein — Battleship Potemkin",creator:"Sergei Eisenstein, 1925–1928",domain:"film",era:1925,thesis:"Invented montage theory — the collision of images creates meaning neither contains alone.",G:9,C:9,V:8,I:9,E:10,motifs:["The Odessa Steps sequence","Montage as argument","Mass as hero","The stone lion","Rhythmic cutting"],parents:"D.W. Griffith's cutting techniques, Constructivist art, Soviet political theory",children:"All political cinema, Godard, Brian De Palma, Kubrick, every film school globally",spheres:["Film","Politics","Art","Education","Advertising","Music video"],hooks:"The Odessa Steps / The stone lions rising / The baby carriage",ids:{}},
+  {id:"b33",tier:1,title:"Kurosawa — Rashomon & Seven Samurai",creator:"Akira Kurosawa, 1950–1954",domain:"film",era:1950,thesis:"Perspectivism in film (Rashomon) and the grammar of ensemble action cinema (Seven Samurai).",G:9,C:8,V:8,I:9,E:9,motifs:["Multiple unreliable narrators","Truth as perspective","The protective hero","Honor in a dishonorable world"],parents:"Kabuki theatre, Shakespeare, Dostoevsky, John Ford westerns",children:"The Magnificent Seven, Star Wars, every samurai film",spheres:["Film","Philosophy","Literature","Theatre","Game design"],hooks:"Rashomon effect / Truth from multiple perspectives",ids:{imdb:"tt0042876"}},
+  {id:"b34",tier:1,title:"Godard — Breathless & Band of Outsiders",creator:"Jean-Luc Godard, 1960–1964",domain:"film",era:1960,thesis:"Cinema aware of itself — jump cuts, direct address, genre deconstruction.",G:8,C:8,V:8,I:8,E:9,motifs:["The jump cut","Direct audience address","Genre deconstruction","Cinema as philosophy"],parents:"Hollywood B-movies, Italian neorealism, André Bazin",children:"Tarantino, Wong Kar-wai, Wes Anderson, music video aesthetics",spheres:["Film","Philosophy","Literature","Music","Visual Art","Education"],hooks:"Cinema is truth 24 frames per second / The jump cut",ids:{}},
+  {id:"b35",tier:1,title:"Metropolis",creator:"Fritz Lang, 1927",domain:"film",era:1927,thesis:"The visual grammar of dystopian urbanism — class division, the machine city, and the robot as fear.",G:9,C:9,V:8,I:9,E:8,motifs:["The worker underground","The machine as monster","The city as class pyramid","The robot double"],parents:"German Expressionism, H.G. Wells, Nietzsche",children:"Blade Runner, Star Wars (C-3PO), The Matrix, every sci-fi dystopia",spheres:["Film","Architecture","Politics","Visual Art","Technology","Music"],hooks:"The machine city / Maria the robot / Workers underground",ids:{imdb:"tt0017136"}},
+  {id:"b36",tier:1,title:"2001: A Space Odyssey",creator:"Stanley Kubrick, 1968",domain:"film",era:1968,thesis:"Cosmic modernism — consciousness, evolution, and monolith as pure visual philosophy.",G:9,C:9,V:7,I:10,E:9,motifs:["The monolith","Human evolution as jump cut","HAL's red eye","The stargate sequence"],parents:"Arthur C. Clarke, Kubrick's previous work, modernist painting",children:"Every serious sci-fi film, Interstellar, Gravity, The Tree of Life, Tarkovsky",spheres:["Film","Philosophy","Science","Music","Visual Art"],hooks:"I'm sorry Dave / Also Sprach Zarathustra / The monolith",ids:{imdb:"tt0062622"}},
+  {id:"b37",tier:1,title:"Star Wars",creator:"George Lucas, 1977",domain:"film",era:1977,thesis:"The industrial myth machine — Campbell's hero's journey as commercial franchise, creating the modern blockbuster.",G:10,C:9,V:10,I:9,E:7,motifs:["The hero's journey","Good vs. evil binary","The father revelation","The mentor's death","The Force"],parents:"Joseph Campbell, Flash Gordon, Kurosawa, John Ford, Wagner",children:"Every blockbuster franchise, MCU, video game narratives, fan fiction culture",spheres:["Film","Literature","Game design","Music","Merchandising","Mythology"],hooks:"May the Force be with you / I am your father / A long time ago",ids:{imdb:"tt0076759"}},
+  {id:"b38",tier:1,title:"Psycho",creator:"Alfred Hitchcock, 1960",domain:"film",era:1960,thesis:"Redefined horror grammar — killing the protagonist, the subjective camera as murder weapon.",G:9,C:8,V:9,I:9,E:8,motifs:["The shower scene","The unreliable villain","The voyeur's camera","Norman's mother","Mundane evil"],parents:"Hitchcock's earlier work, German Expressionism, Poe",children:"Slasher genre, De Palma, The Silence of the Lambs, horror as art film",spheres:["Film","Psychology","Horror genre","Music","Feminist film theory"],hooks:"The shower scene / We all go a little mad sometimes / Norman Bates",ids:{}},
+  {id:"b39",tier:1,title:"Ozu — Tokyo Story",creator:"Yasujirō Ozu, 1953",domain:"film",era:1953,thesis:"The grammar of understatement — low camera, pillow shots, family as disappointment.",G:7,C:7,V:6,I:8,E:9,motifs:["The tatami shot","Children who disappoint","The passing of the old","Mono no aware","Empty rooms"],parents:"Japanese aesthetics, Noh silence",children:"Wim Wenders, Kore-eda, slow cinema globally",spheres:["Film","Family sociology","Aesthetics","Japanese cultural studies"],hooks:"Isn't life disappointing? / The tatami angle",ids:{}},
+  {id:"b40",tier:1,title:"Leonardo da Vinci — Last Supper & Notebooks",creator:"Leonardo da Vinci, 1490s",domain:"art",era:1495,thesis:"The total artist-scientist — the Last Supper as the definitive study of reaction; the notebooks fusing art and science.",G:9,C:10,V:8,I:9,E:9,motifs:["Dramatic reaction","Sfumato","The flying machine","The Vitruvian Man","Art as scientific inquiry"],parents:"Verrocchio's workshop, Florentine humanism, classical sculpture",children:"Raphael, High Renaissance idealism, anatomical illustration",spheres:["Visual Art","Science","Engineering","Anatomy","Theology","Cultural icon"],hooks:"The Mona Lisa smile / The Last Supper / The Vitruvian Man",ids:{wikidata:"Q762"}},
+  {id:"b41",tier:1,title:"Michelangelo — Sistine Chapel & Sculpture",creator:"Michelangelo Buonarroti, 1508–1512",domain:"art",era:1508,thesis:"The body as spiritual expression — the Sistine ceiling as the complete visual theology of the Renaissance.",G:9,C:9,V:9,I:9,E:9,motifs:["The creation of Adam","The sibyl","Terribilità","The non-finito","The bound slave"],parents:"Classical antiquity, Donatello, Ghirlandaio, Neoplatonic Florence",children:"Baroque sculpture, the muscular body as ideal, Rodin",spheres:["Visual Art","Theology","Aesthetics","Cultural icon","Architecture"],hooks:"The creation of Adam / Pietà / David / The Sistine ceiling",ids:{}},
+  {id:"b42",tier:1,title:"Caravaggio — Paintings 1600–1610",creator:"Michelangelo Merisi da Caravaggio, 1600–1610",domain:"art",era:1603,thesis:"Tenebrism as psychological grammar — darkness and sudden light as moral confrontation.",G:9,C:8,V:8,I:9,E:8,motifs:["Tenebrism","The street person as saint","Violence as sacred","The moment of decision"],parents:"Venetian colorism, Florentine mannerism",children:"Baroque painting across Europe, Rembrandt, Rubens, film noir lighting, photography",spheres:["Visual Art","Theology","Photography","Film lighting","Aesthetics"],hooks:"The calling of Saint Matthew / Judith beheading Holofernes / Chiaroscuro",ids:{}},
+  {id:"b43",tier:1,title:"Rembrandt — Paintings & Etchings",creator:"Rembrandt van Rijn, 1630–1669",domain:"art",era:1642,thesis:"Psychological interiority in paint — the self-portrait as autobiography, light as a moral instrument.",G:8,C:8,V:7,I:9,E:9,motifs:["Self-portrait across aging","Light from within darkness","The dignified ordinary person","Aging as subject"],parents:"Caravaggio, Dutch Golden Age, Protestant biblical tradition",children:"Portrait photography, all European realist painting, Sargent",spheres:["Visual Art","Theology","Psychology","Photography","Cultural icon"],hooks:"The Night Watch / The Return of the Prodigal Son",ids:{}},
+  {id:"b44",tier:1,title:"Picasso — Guernica & Les Demoiselles d'Avignon",creator:"Pablo Picasso, 1907–1937",domain:"art",era:1907,thesis:"Cubism as the visual syntax of modernity — multiple perspectives simultaneously.",G:9,C:9,V:9,I:10,E:9,motifs:["Multiple simultaneous perspectives","The broken body as war","African mask as formal rupture","The bull"],parents:"Cézanne, African sculpture, Iberian art, El Greco",children:"All 20th century art, abstraction, design, advertising aesthetics",spheres:["Visual Art","Politics","Philosophy","Design","Aesthetics","Education"],hooks:"Guernica / Les Demoiselles / Cubism / Art is a lie that makes us realize truth",ids:{}},
+  {id:"b45",tier:1,title:"Duchamp — Fountain & Readymades",creator:"Marcel Duchamp, 1913–1917",domain:"art",era:1917,thesis:"The conceptual pivot — art is defined by selection and context, not craft.",G:9,C:9,V:7,I:9,E:8,motifs:["The readymade","Context defines meaning","Anti-retinal art","The artist as selector"],parents:"Cubism, Dadaism, Symbolism",children:"Conceptual art, Andy Warhol, Installation art, Damien Hirst, Jeff Koons",spheres:["Visual Art","Philosophy","Art theory","Design","Politics"],hooks:"The urinal as art / The readymade / What is art?",ids:{}},
+  {id:"b46",tier:1,title:"Warhol — Campbell's Soup & Marilyn Series",creator:"Andy Warhol, 1962–1967",domain:"art",era:1962,thesis:"Mass culture as art — celebrity as icon, consumer goods as mythology.",G:9,C:10,V:9,I:9,E:8,motifs:["Mass production as aesthetic","Celebrity as sacred icon","Repetition changes meaning","Death and celebrity","15 minutes of fame"],parents:"Duchamp, commercial illustration, Hollywood celebrity culture",children:"All pop art, Instagram culture, meme culture",spheres:["Visual Art","Film","Music","Advertising","Social media","Philosophy"],hooks:"15 minutes of fame / Campbell's soup cans / Marilyn / Factory",ids:{}},
+  {id:"b47",tier:1,title:"Beethoven — Symphonies & Late Quartets",creator:"Ludwig van Beethoven, 1800–1826",domain:"music",era:1808,thesis:"The composer as heroic individual — expanded the emotional range and formal ambition of music.",G:9,C:9,V:9,I:10,E:10,motifs:["Da-da-da-DUM fate motif","The Ode to Joy","Heroic struggle to triumph","The deaf composer"],parents:"Haydn, Mozart, Clementi, French Revolutionary music",children:"All Romantic music, film scoring, the symphony as major art form",spheres:["Music","Philosophy","Politics","Film","Culture studies","Education"],hooks:"Da-da-da-DUM / Ode to Joy / The deaf composer / The Moonlight Sonata",ids:{}},
+  {id:"b48",tier:1,title:"Wagner — Tristan und Isolde & The Ring Cycle",creator:"Richard Wagner, 1859–1876",domain:"music",era:1865,thesis:"The harmonic revolution that made the 20th century possible — chromaticism to breaking point, Gesamtkunstwerk.",G:9,C:9,V:8,I:10,E:9,motifs:["Leitmotif","Endless melody","Redemption through love-death","The total artwork","Chromatic tension"],parents:"Beethoven, Weber, Schopenhauer",children:"Schoenberg, film scoring (John Williams), Mahler, Bruckner",spheres:["Music","Theatre","Philosophy","Politics","Film","Literature"],hooks:"Ride of the Valkyries / Tristan chord / The Ring / Leitmotif",ids:{}},
+  {id:"b49",tier:1,title:"Louis Armstrong — Hot Five/Seven Recordings",creator:"Louis Armstrong, 1925–1928",domain:"music",era:1926,thesis:"Invented jazz as a soloist's art — improvisation as individual voice, swing as rhythmic democracy.",G:9,C:8,V:9,I:9,E:8,motifs:["The improvised solo","Swing rhythm","Scat as wordless narrative","Jazz as African American modernism"],parents:"New Orleans brass band tradition, blues, ragtime",children:"All jazz, swing era, Dizzy Gillespie, Miles Davis, American popular music",spheres:["Music","Culture","Race relations","American identity","Film","Dance"],hooks:"West End Blues / What a Wonderful World / Satchmo",ids:{}},
+  {id:"b50",tier:1,title:"Miles Davis — Kind of Blue & Bitches Brew",creator:"Miles Davis, 1959 & 1970",domain:"music",era:1959,thesis:"Two genre-defining pivots: modal jazz and jazz fusion — one artist rebooting a tradition twice.",G:9,C:8,V:8,I:9,E:8,motifs:["Modal improvisation","Space as music","Genre as something to leave behind","Cool restraint"],parents:"Armstrong, Charlie Parker, Bill Evans, avant-garde classical",children:"All post-bop jazz, fusion, trip-hop, neo-soul, Radiohead",spheres:["Music","Aesthetics","Race","American culture","Film"],hooks:"So What / Kind of Blue / The birth of the cool",ids:{}},
+  {id:"b51",tier:1,title:"The Beatles — Sgt. Pepper's & Abbey Road",creator:"The Beatles, 1967–1969",domain:"music",era:1967,thesis:"The album as art form, the studio as instrument — defining pop music's global ambitions.",G:10,C:9,V:10,I:10,E:9,motifs:["The concept album","Studio as instrument","Cross-cultural appropriation","Rock as art music"],parents:"Chuck Berry, Little Richard, Tin Pan Alley, Indian classical music",children:"Every subsequent rock and pop band, music production as art form",spheres:["Music","Culture","Fashion","Film","Politics","Youth culture"],hooks:"All You Need Is Love / Eleanor Rigby / A Day in the Life",ids:{}},
+  {id:"b52",tier:1,title:"Kraftwerk — Autobahn & Trans-Europe Express",creator:"Kraftwerk, 1974–1978",domain:"music",era:1974,thesis:"Electronic minimalism as the root of everything from hip-hop to techno to pop.",G:9,C:8,V:7,I:9,E:7,motifs:["Machine as musician","The robotic aesthetic","Repetition as hypnosis","European modernism in music"],parents:"Stockhausen, Tangerine Dream, electronic music experiments",children:"David Bowie (Berlin trilogy), hip-hop (Afrika Bambaataa), techno, house, all electronic music",spheres:["Music","Technology","Dance culture","Art","Design","Film"],hooks:"Autobahn / The robots / Trans-Europe Express",ids:{}},
+  {id:"b53",tier:1,title:"Public Enemy — It Takes a Nation of Millions",creator:"Public Enemy, 1988",domain:"music",era:1988,thesis:"Sound collage as political argument — dense sampling, confrontational lyrics.",G:8,C:8,V:8,I:8,E:7,motifs:["Sampling as argument","The wall of sound","Black radical tradition","Media as enemy"],parents:"Kraftwerk samples, soul music, James Brown, Black Power movement",children:"Conscious hip-hop lineage, political rap globally, Kendrick Lamar, The Roots",spheres:["Music","Politics","Race","Culture","Media criticism"],hooks:"Fight the Power / 911 is a joke / Don't believe the hype",ids:{}},
+  {id:"b54",tier:1,title:"Kendrick Lamar — To Pimp a Butterfly",creator:"Kendrick Lamar, 2015",domain:"music",era:2015,thesis:"The concept album as Black American political autobiography — jazz, funk, spoken word at literary level.",G:7,C:8,V:8,I:8,E:7,motifs:["The butterfly/caterpillar transformation","Fame vs. identity","Racial capitalism","The inner voice"],parents:"Marvin Gaye, Nina Simone, Miles Davis, Nas, Langston Hughes",children:"Contemporary conscious hip-hop, Pulitzer Prize (DAMN.), hip-hop as literary form",spheres:["Music","Race","Politics","Literature","Psychology","American culture"],hooks:"Alright / i / Every Kendrick verse",ids:{}},
+  {id:"b55",tier:1,title:"The Tale of Genji",creator:"Murasaki Shikibu, ~1000 CE",domain:"literature",era:1000,thesis:"The world's first psychological novel — mono no aware, aristocratic interiority.",G:8,C:7,V:6,I:8,E:8,motifs:["Mono no aware","Love as loss","The aesthetic life","The brilliant but destructive hero"],parents:"Heian court poetry, Pillow Book, earlier kana literature",children:"All subsequent Japanese literature, kawaii aesthetics, anime's emotional grammar",spheres:["Literature","Psychology","Aesthetics","Feminism","Japanese culture"],hooks:"Mono no aware / The Shining Prince / Nothing is sadder",ids:{}},
+  {id:"b56",tier:1,title:"Journey to the West",creator:"Wu Cheng'en (attributed), 16th century",domain:"non-western",era:1590,thesis:"The pilgrim quest as comic epic — Sun Wukong the Monkey King as trickster-hero, Buddhism as adventure.",G:9,C:8,V:7,I:8,E:8,motifs:["The trickster hero","The pilgrimage structure","Enlightenment through suffering","72 transformations"],parents:"Buddhist sutras, the historical pilgrimage of Xuanzang, Chinese oral tradition",children:"Dragon Ball Z (directly), wuxia fiction, Chinese film and TV",spheres:["Literature","Religion","Film","Animation","Philosophy","Chinese culture"],hooks:"Sun Wukong / 72 transformations / Dragon Ball",ids:{}},
+  {id:"b57",tier:1,title:"Popol Vuh",creator:"K'iche' Maya authors, compiled ~1550 CE",domain:"non-western",era:-1000,thesis:"The Maya creation epic — the Hero Twins, multiple attempts at creating humanity, and cyclical time.",G:7,C:7,V:5,I:7,E:7,motifs:["Failed creation attempts","The Hero Twins","Death lords","The ball game as cosmic ritual"],parents:"Pre-Columbian oral tradition, Maya cosmology",children:"Latin American literature, magical realism, Mesoamerican studies",spheres:["Literature","Religion","Anthropology","Art","Cosmology"],hooks:"The Hero Twins / Corn people / The underworld ball game",ids:{}},
+  {id:"b58",tier:1,title:"I Ching (Book of Changes)",creator:"Multiple authors, compiled ~700 BCE",domain:"non-western",era:-700,thesis:"Combinatorial divination as philosophy — influencing Leibniz's binary notation, Jung, and John Cage.",G:7,C:8,V:5,I:7,E:7,motifs:["Yin and yang as dynamic pair","Change as the only constant","The hexagram system","Timing and transition"],parents:"Chinese cosmological thought, Zhou dynasty divination",children:"Leibniz (binary math), Jung (synchronicity), John Cage, Philip K. Dick",spheres:["Philosophy","Mathematics","Psychology","Music","Literature","Computing theory"],hooks:"64 hexagrams / Yin and yang / The moving line",ids:{}},
+  {id:"b59",tier:1,title:"Rumi — Masnavi & Divan-e Shams",creator:"Jalal ad-Din Muhammad Rumi, 1258–1273",domain:"non-western",era:1258,thesis:"The best-selling poet in the US in translation — love mysticism, the soul's longing.",G:8,C:8,V:7,I:8,E:7,motifs:["The reed flute's longing","The beloved as God","The whirling as prayer","Love as annihilation of self"],parents:"The Quran, Attar, Persian classical poetry, Plato's Symposium",children:"Sufi music and dance globally, New Age spirituality",spheres:["Poetry","Religion","Music","Psychology","Spirituality","Education"],hooks:"The reed flute / Out beyond ideas of wrongdoing / The Guest House",ids:{}},
+  {id:"b60",tier:1,title:"Upanishads",creator:"Multiple teachers, ~800–200 BCE",domain:"non-western",era:-700,thesis:"Tat tvam asi — the identity of individual soul and universal consciousness as the most radical non-dual philosophy.",G:8,C:8,V:6,I:8,E:8,motifs:["Atman = Brahman","Tat tvam asi","Maya as illusion","Consciousness as ultimate reality"],parents:"Vedic hymns, Brahmana ritual texts, forest philosophy",children:"Vedanta, Yoga tradition, Schopenhauer, German Romanticism, Emerson, Thoreau",spheres:["Philosophy","Religion","Psychology","Aesthetics","Yoga","Western thought"],hooks:"Tat tvam asi / That art thou / Neti neti",ids:{}},
+  {id:"b61",tier:1,title:"Ibn Khaldun — Muqaddimah",creator:"Ibn Khaldun, 1377",domain:"non-western",era:1377,thesis:"The first sociology and philosophy of history — asabiyya as the engine of civilizational rise and fall.",G:7,C:8,V:6,I:8,E:7,motifs:["Asabiyya","Civilizational cycles","The desert-city dynamic","History as pattern"],parents:"Islamic historical tradition, Aristotle, al-Masudi",children:"Modern sociology, Toynbee, comparative history, world-systems theory",spheres:["History","Sociology","Philosophy","Economics","Political science"],hooks:"Asabiyya / Civilizations rise and fall",ids:{}},
+  {id:"b62",tier:1,title:"Achebe — Things Fall Apart",creator:"Chinua Achebe, 1958",domain:"literature",era:1958,thesis:"The definitive rewriting of the colonial encounter from within — Igbo society given full narrative dignity.",G:8,C:8,V:8,I:8,E:9,motifs:["The centre cannot hold","Okonkwo's fatal pride","Traditional society's internal logic","Colonial disruption"],parents:"Yeats (title), Ibo oral tradition, Conrad (as counter-text), Shakespeare",children:"African literature boom, postcolonial theory, Chimamanda Ngozi Adichie",spheres:["Literature","Postcolonial theory","Anthropology","Politics","Education"],hooks:"The centre cannot hold / Okonkwo / Things fall apart",ids:{}},
+  {id:"b63",tier:1,title:"García Márquez — One Hundred Years of Solitude",creator:"Gabriel García Márquez, 1967",domain:"literature",era:1967,thesis:"Magical realism as the grammar of Latin American experience — the family saga as continental history.",G:8,C:8,V:8,I:9,E:8,motifs:["Magical realism","The cyclical family","Memory as creation","Solitude as condition"],parents:"Faulkner, Borges, Rulfo, Kafka, One Thousand and One Nights",children:"Magical realism globally (Rushdie, Allende, Mo Yan)",spheres:["Literature","Politics","History","Philosophy","Latin American studies"],hooks:"Many years later as he faced the firing squad / Macondo / Yellow butterflies",ids:{}},
+  {id:"b64",tier:1,title:"Borges — Ficciones & Labyrinths",creator:"Jorge Luis Borges, 1944–1962",domain:"literature",era:1944,thesis:"The story as philosophical argument — the library, the labyrinth, and the garden of forking paths.",G:8,C:9,V:7,I:9,E:8,motifs:["The infinite library","The labyrinth","The map that is the territory","Time as branching"],parents:"Quevedo, Cervantes, Chesterton, Poe, Kafka, One Thousand and One Nights",children:"Postmodernism, hypertext theory, Eco, Pynchon, García Márquez, The Matrix",spheres:["Literature","Philosophy","Mathematics","Technology","Film","Postmodernism"],hooks:"The Library of Babel / The Garden of Forking Paths / The Aleph",ids:{}},
+  {id:"b65",tier:1,title:"Sophocles — Oedipus Rex & Antigone",creator:"Sophocles, ~440–441 BCE",domain:"literature",era:-441,thesis:"The definitive forms of tragic structure — the hero undone by knowledge.",G:9,C:9,V:8,I:9,E:9,motifs:["The knowledge that destroys","The oracle that cannot be escaped","Laws of men vs. gods","Tragic recognition"],parents:"Aeschylus, Athenian religious tradition, Homer",children:"Aristotle's Poetics, Freud, Hamlet, every tragedy since",spheres:["Literature","Philosophy","Psychology","Law","Political theory","Theatre"],hooks:"Oedipus complex / I am not made for enmity but for love",ids:{}},
+  {id:"b66",tier:1,title:"Dhammapada & Buddhist Sutras",creator:"Attributed to the Buddha, compiled ~250 BCE",domain:"non-western",era:-250,thesis:"Mind as the root of suffering and liberation — the Four Noble Truths and Eightfold Path.",G:8,C:8,V:7,I:8,E:9,motifs:["Mind is the forerunner of all actions","The middle way","Impermanence","Non-self"],parents:"Early Indian philosophical tradition, Vedic thought (as reaction)",children:"Mahayana Buddhism, Zen, Tibetan Buddhism, mindfulness movement, psychotherapy",spheres:["Religion","Philosophy","Psychology","Medicine","Art","East Asian culture"],hooks:"All suffering comes from attachment / The middle way",ids:{}},
+  {id:"b67",tier:1,title:"Hobbes — Leviathan",creator:"Thomas Hobbes, 1651",domain:"philosophy",era:1651,thesis:"The state of nature as war of all against all — sovereignty as the only escape from brutality.",G:7,C:9,V:7,I:8,E:8,motifs:["War of all against all","Life as nasty brutish and short","The Leviathan as sovereign","Fear as political foundation"],parents:"Thucydides, Machiavelli, classical science (Galileo)",children:"Modern political science, international relations realism, Locke (as counterargument)",spheres:["Philosophy","Politics","Law","International relations","Social science"],hooks:"Nasty brutish and short / Leviathan / The war of all against all",ids:{}},
+  {id:"b68",tier:1,title:"Locke — Second Treatise of Government",creator:"John Locke, 1689–1690",domain:"philosophy",era:1689,thesis:"Life, liberty, and property as natural rights — the philosophical foundation of liberal democracy.",G:8,C:9,V:8,I:8,E:9,motifs:["Natural rights","Government by consent","Tabula rasa","The right to revolution"],parents:"Hobbes (as counterpoint), English common law, Protestant theology",children:"American Constitution, French Revolution, Jefferson, modern liberalism, human rights discourse",spheres:["Philosophy","Politics","Law","Education","Economics","International relations"],hooks:"Life liberty and property / Government by consent / The right to revolution",ids:{}},
+  {id:"b69",tier:1,title:"The Bhagavad Gita",creator:"Within the Mahabharata, ~200 BCE–200 CE",domain:"non-western",era:-200,thesis:"Act without attachment to outcomes — dharmic action, yoga, and devotion.",G:9,C:9,V:7,I:9,E:9,motifs:["Action without attachment","The atman is eternal","Yoga as paths to the divine","Duty vs. feeling","I am become death"],parents:"Upanishads, Vedic tradition, the Mahabharata war narrative",children:"Vedanta, Gandhi (his daily guide), Emerson, Thoreau, Oppenheimer, New Age spirituality",spheres:["Religion","Philosophy","Politics","Psychology","Yoga","Western thought"],hooks:"I am become death / Act without attachment / The yoga of action",ids:{}},
+  {id:"b70",tier:1,title:"Hokusai — The Great Wave",creator:"Katsushika Hokusai, 1830–1833",domain:"non-western",era:1831,thesis:"The most recognized work of art in the world — ukiyo-e as the fuel of Western Japonisme.",G:8,C:9,V:7,I:9,E:8,motifs:["The wave as nature's power","Mt. Fuji as constant","Flatness and line","Human dwarfed by nature"],parents:"Chinese landscape painting, Edo period woodblock tradition",children:"Monet, Van Gogh, Art Nouveau, graphic design globally",spheres:["Visual Art","Design","Aesthetics","Cultural exchange","Graphic design"],hooks:"The Great Wave / Mt. Fuji / The Japonisme influence",ids:{}},
+  {id:"b71",tier:1,title:"Noh Theatre — Zeami's Works",creator:"Zeami Motokiyo, ~1363–1443",domain:"non-western",era:1390,thesis:"Yūgen (mysterious grace) and ma (interval) as aesthetic principles — the ghost as theatrical grammar.",G:7,C:7,V:5,I:7,E:7,motifs:["Yūgen","The masked face","The ghost who doesn't know they're dead","Ma (interval/silence)"],parents:"Sarugaku, Chinese poetry, Shinto and Buddhist ritual",children:"Yeats (explicitly borrowed), Beckett, Butoh dance, contemporary performance art",spheres:["Theatre","Philosophy","Dance","Visual Art","Literature","Film"],hooks:"Yūgen / The mask / Ma (the pause) / The ghost as protagonist",ids:{}},
+  {id:"b72",tier:1,title:"Greek Tragedy — Aeschylus: Oresteia",creator:"Aeschylus, 458 BCE",domain:"literature",era:-458,thesis:"The first trilogy — justice transforming from blood vengeance to law.",G:8,C:9,V:7,I:8,E:8,motifs:["The curse on the house","Blood calls for blood","Justice replacing vengeance","The Furies / Eumenides"],parents:"Homeric tradition, Athenian religious ritual",children:"Legal philosophy, O'Neill, Sartre (The Flies), all revenge tragedy",spheres:["Literature","Law","Philosophy","Theatre","Political theory"],hooks:"Blood calls for blood / The Furies / The trial of Orestes",ids:{}},
+  {id:"b73",tier:1,title:"Sundiata Epic",creator:"Griots of the Mali Empire, ~13th century CE",domain:"non-western",era:1240,thesis:"The founding myth of the Mali Empire — oral literature as historical record.",G:7,C:7,V:6,I:7,E:6,motifs:["The disabled hero's transformation","The griot as keeper of memory","Exile before return","The lion king"],parents:"West African oral tradition, Mande culture",children:"West African literature, Pan-African identity, griotic tradition globally",spheres:["Literature","History","Music","Political theory","African studies","Anthropology"],hooks:"The griot / The lion king / Oral tradition as history",ids:{}},
+  {id:"b74",tier:1,title:"Rousseau — The Social Contract",creator:"Jean-Jacques Rousseau, 1762",domain:"philosophy",era:1762,thesis:"The general will and natural goodness — the philosophical trigger of the French Revolution.",G:8,C:9,V:8,I:8,E:8,motifs:["Man is born free everywhere in chains","The general will","Natural goodness corrupted"],parents:"Locke, Hobbes, Montaigne, Plutarch",children:"French Revolution, Romanticism, Kant, modern education theory",spheres:["Philosophy","Politics","Education","Literature","Romanticism","Ecology"],hooks:"Man is born free and everywhere is in chains / The general will",ids:{}},
+  {id:"b75",tier:1,title:"Adam Smith — The Wealth of Nations",creator:"Adam Smith, 1776",domain:"philosophy",era:1776,thesis:"The invisible hand, the division of labor, and market mechanism as self-organizing system.",G:8,C:9,V:7,I:8,E:8,motifs:["The invisible hand","The division of labor","Self-interest as social good"],parents:"Hume, Mandeville, Physiocrats",children:"Classical economics, Ricardo, Mill, modern economics",spheres:["Economics","Politics","Philosophy","History","Sociology"],hooks:"The invisible hand / The division of labor / Free trade",ids:{}},
+  {id:"b76",tier:1,title:"Velázquez — Las Meninas",creator:"Diego Velázquez, 1656",domain:"art",era:1656,thesis:"The most analyzed painting in Western art — a meditation on representation and the gaze.",G:7,C:8,V:6,I:9,E:8,motifs:["The mirror and the gaze","The painter in the painting","Who is looking at whom","Representation representing itself"],parents:"Titian's royal portraits, Italian naturalism",children:"Foucault's The Order of Things, Picasso's 58 variations",spheres:["Visual Art","Philosophy","Art criticism","Photography","Film"],hooks:"The mirror at the back / The painter looking out",ids:{}},
+  {id:"b77",tier:1,title:"Goya — The Third of May & Black Paintings",creator:"Francisco Goya, 1814–1823",domain:"art",era:1814,thesis:"The first modern artist — war as atrocity, the unconscious as subject matter.",G:8,C:8,V:7,I:9,E:8,motifs:["The white shirt as innocence","Saturn devouring his son","The sleep of reason produces monsters"],parents:"Velázquez (his master), Rembrandt, classical tradition",children:"Manet, Picasso's Guernica (direct descendant), all war photography, Francis Bacon",spheres:["Visual Art","War history","Psychology","Philosophy","Photography","Political art"],hooks:"The Third of May / The sleep of reason / Saturn devouring",ids:{}},
+  {id:"b78",tier:1,title:"Van Gogh — The Starry Night",creator:"Vincent van Gogh, 1888–1890",domain:"art",era:1889,thesis:"Expressionism before expressionism — color and brushstroke as direct emotional transmission.",G:8,C:8,V:6,I:9,E:8,motifs:["The starry swirl","Yellow as spiritual ecstasy","The letter as art form","Suffering as authenticity"],parents:"Impressionism, Japanese ukiyo-e, Millet, Delacroix",children:"German Expressionism, Fauvism, the myth of the suffering artist",spheres:["Visual Art","Psychology","Art history","Music","Cultural icon"],hooks:"The Starry Night / The sunflowers / Starry starry night / The ear",ids:{}},
+  {id:"b79",tier:1,title:"Joyce — Ulysses",creator:"James Joyce, 1922",domain:"literature",era:1922,thesis:"One day in Dublin as the Odyssey — stream of consciousness as literary form.",G:8,C:8,V:6,I:9,E:9,motifs:["Stream of consciousness","One day as universal","The interior monologue","Language as subject"],parents:"Homer, Shakespeare, Dante, Vico, Ibsen, French Symbolism",children:"The modernist novel, Woolf, Beckett, Pynchon, every experimental novel since",spheres:["Literature","Language","Philosophy","Psychology","Education"],hooks:"Yes I said yes I will Yes / Stream of consciousness / Bloomsday",ids:{}},
+  {id:"b80",tier:1,title:"Foucault — Discipline and Punish & The Order of Things",creator:"Michel Foucault, 1966–1975",domain:"philosophy",era:1966,thesis:"Power is everywhere and nowhere — the panopticon, the medical gaze, discourse as the medium of power.",G:8,C:9,V:7,I:9,E:8,motifs:["The panopticon","Power/knowledge","The gaze as control","Discourse as power","The docile body"],parents:"Nietzsche, Heidegger, Canguilhem, Durkheim",children:"Poststructuralism, gender studies, surveillance studies, Baudrillard, Butler",spheres:["Philosophy","Politics","Sociology","History","Literature","Architecture","Medicine"],hooks:"The panopticon / Power/knowledge / The gaze / Biopower",ids:{}},
+  {id:"b81",tier:1,title:"Aristotle — Rhetoric",creator:"Aristotle, 350 BCE",domain:"philosophy",era:-350,thesis:"Logos, ethos, and pathos — the permanent vocabulary of persuasion.",G:8,C:9,V:7,I:8,E:8,motifs:["Logos (reason)","Ethos (character)","Pathos (emotion)","The three modes of persuasion"],parents:"Sophists, Plato, Isocrates",children:"Roman rhetoric (Cicero), all oratory, advertising, political speech, law",spheres:["Language","Law","Politics","Advertising","Philosophy","Education"],hooks:"Logos ethos pathos / The three modes / Rhetoric as civic skill",ids:{}},
+  {id:"b82",tier:1,title:"Chuck Berry & Early Rock and Roll",creator:"Chuck Berry, Little Richard, Fats Domino, 1954–1958",domain:"music",era:1955,thesis:"The electric guitar riff and the backbeat as the grammar of global youth culture.",G:10,C:9,V:10,I:9,E:7,motifs:["The guitar riff","The backbeat","The teenage subject","Sex and freedom as music","The 12-bar blues structure"],parents:"Delta Blues, Gospel, R&B, Country",children:"The Beatles, Rolling Stones, all rock music, punk, metal, all pop",spheres:["Music","Youth culture","Race","American history","Dance","Film"],hooks:"Johnny B. Goode / Maybellene / Roll over Beethoven",ids:{}},
+  {id:"b83",tier:1,title:"Beowulf",creator:"Unknown, composed ~700–1000 CE",domain:"literature",era:800,thesis:"The foundational English-language epic — the monster as external embodiment of internal chaos.",G:7,C:7,V:5,I:8,E:8,motifs:["The monster from the marsh","Heroic boasting","The mead-hall as civilization","The dying king"],parents:"Germanic oral tradition, Old Norse mythology, Christian overlay",children:"Tolkien (profoundly shaped by it), all high fantasy, Nordic genre",spheres:["Literature","History","Language","Fantasy genre","Education"],hooks:"Grendel from the marsh / Tolkien's debt / The mead-hall",ids:{}},
+  {id:"b84",tier:1,title:"Vermeer & Dutch Golden Age",creator:"Vermeer, Hals, de Hooch, ~1600–1680",domain:"art",era:1655,thesis:"The domestic interior as spiritual space — light as devotion, the everyday as worthy subject.",G:7,C:7,V:6,I:8,E:8,motifs:["Light through a window","The domestic interior","The silent woman at work","Ordinary life as sacred"],parents:"Caravaggio's tenebrism, Flemish tradition, Calvinist theology",children:"19th century realism, photography, Girl with a Pearl Earring phenomenon",spheres:["Visual Art","Theology","Aesthetics","Photography","Interior design"],hooks:"Girl with a Pearl Earring / Light through the window / Vermeer's silence",ids:{}},
+  {id:"b85",tier:1,title:"Gregorian Chant & Western Polyphony",creator:"Various, ~8th–15th century",domain:"music",era:900,thesis:"The harmonic foundation of all Western music — monophonic prayer becoming polyphony.",G:8,C:7,V:6,I:7,E:9,motifs:["The single voice in prayer","Polyphony as conversation with God","The mode as emotional territory"],parents:"Byzantine chant, Roman liturgy, Jewish cantillation",children:"Bach's chorale harmonizations, Renaissance polyphony, all Western harmony",spheres:["Music","Theology","Architecture","Education","Aesthetics"],hooks:"Gregorian chant / Kyrie Eleison / Polyphony / Plainchant",ids:{}},
+  {id:"b86",tier:1,title:"The Matrix",creator:"The Wachowskis, 1999",domain:"film",era:1999,thesis:"Philosophy as action cinema — Plato's Cave, Baudrillard's simulacra, and Descartes in bullet-time.",G:9,C:9,V:9,I:9,E:7,motifs:["The red pill / blue pill","Reality as simulation","The chosen one","Bullet time","Awakening to truth"],parents:"Plato, Baudrillard, Philip K. Dick, Descartes, cyberpunk, kung fu films",children:"Red-pill as political metaphor, simulation theory as philosophy meme",spheres:["Film","Philosophy","Technology","Politics","Game design","Cultural meme"],hooks:"Red pill or blue pill / There is no spoon / Follow the white rabbit",ids:{imdb:"tt0133093"}},
+  {id:"b87",tier:1,title:"Hitchcock — Vertigo & Rear Window",creator:"Alfred Hitchcock, 1954–1958",domain:"film",era:1958,thesis:"The grammar of the gaze — cinema as voyeurism, the camera as desire, suspense as controlled anxiety.",G:9,C:8,V:8,I:9,E:9,motifs:["The voyeur at the window","Cinema as controlled looking","The Vertigo effect","Obsessive love as destruction"],parents:"Silent film, German Expressionism, his own British thrillers",children:"Feminist film theory (Laura Mulvey's 'male gaze'), De Palma, Fincher, psychological thriller",spheres:["Film","Aesthetics","Feminism","Psychology","Television"],hooks:"The male gaze / Rear Window / Vertigo zoom / The MacGuffin",ids:{}},
+  {id:"b88",tier:1,title:"Boccaccio — The Decameron",creator:"Giovanni Boccaccio, 1353",domain:"literature",era:1353,thesis:"Stories told to survive the plague — the frame narrative as Italian model, worldly wit as morality.",G:8,C:7,V:7,I:8,E:7,motifs:["Stories as survival","Plague as frame","Wit over morality","The clever servant"],parents:"One Thousand and One Nights, Ovid, Virgil, French fabliaux",children:"Chaucer's Canterbury Tales, Shakespeare's plots, the novella tradition",spheres:["Literature","Comedy","Social history","Medicine","Theatre"],hooks:"The ten storytellers / The plague of Florence",ids:{}},
+  {id:"b89",tier:1,title:"Tolstoy — Anna Karenina",creator:"Leo Tolstoy, 1878",domain:"literature",era:1878,thesis:"Happy families are all alike — the social novel as moral reckoning.",G:7,C:8,V:7,I:8,E:8,motifs:["The train as fate","Society as trap for women","The parallel structure"],parents:"Flaubert's Madame Bovary, Pushkin, Russian social tradition",children:"The social realist novel, film adaptations, feminist literary criticism",spheres:["Literature","Philosophy","Feminism","Social history","Film"],hooks:"Happy families are all alike / The train / Anna and Levin",ids:{}},
+  {id:"b90",tier:1,title:"Wittgenstein — Tractatus & Philosophical Investigations",creator:"Ludwig Wittgenstein, 1921–1953",domain:"philosophy",era:1921,thesis:"Whereof one cannot speak, thereof one must be silent — language as the limit of thought.",G:7,C:8,V:5,I:8,E:8,motifs:["The limits of language","Language games","Forms of life","Whereof one cannot speak","Family resemblance"],parents:"Frege, Russell, Schopenhauer, Austrian cultural milieu",children:"Analytic philosophy, logical positivism, ordinary language philosophy",spheres:["Philosophy","Language","Mathematics","Science","Art criticism","Ethics"],hooks:"Whereof one cannot speak / Language games / Forms of life",ids:{}},
+  {id:"b91",tier:1,title:"Flaubert — Madame Bovary",creator:"Gustave Flaubert, 1857",domain:"literature",era:1857,thesis:"Free indirect discourse as the grammar of irony — Emma Bovary's romantic delusions as critique of media-fed desire.",G:8,C:8,V:7,I:8,E:8,motifs:["Romantic delusion vs. reality","Free indirect discourse","The provinces as prison","Bovaryisme"],parents:"Don Quixote (parallel structure), Balzac, Stendhal",children:"Naturalism, Henry James, Joyce, Woolf, contemporary literary fiction",spheres:["Literature","Philosophy","Feminism","Psychology","Language"],hooks:"Bovaryisme / Free indirect discourse / Emma's romantic delusions",ids:{}},
+  {id:"b92",tier:1,title:"Avicenna (Ibn Sina) — Canon of Medicine",creator:"Ibn Sina, ~1020 CE",domain:"non-western",era:1020,thesis:"The synthesis of Greek medicine and Islamic philosophy — standard European medical textbook for 600 years.",G:7,C:9,V:7,I:8,E:8,motifs:["The flying man (consciousness)","Medicine as systematic philosophy","Greek knowledge transmitted and extended"],parents:"Aristotle, Galen, Al-Kindi, Islamic scholarship",children:"European medical tradition, scholastic philosophy",spheres:["Medicine","Philosophy","Science","Islamic culture","Education"],hooks:"The flying man / Canon of Medicine / Islamic Golden Age synthesis",ids:{}},
+  {id:"b93",tier:1,title:"Gamelan Music — Balinese & Javanese Tradition",creator:"Court traditions, ~9th century CE onwards",domain:"non-western",era:900,thesis:"The interlocking pattern as collective music — communal composition without a conductor.",G:6,C:7,V:5,I:7,E:7,motifs:["Interlocking patterns (kotekan)","Cyclical structure","Communal playing as meditation"],parents:"Hindu-Buddhist court culture, indigenous Indonesian music",children:"Debussy, John Cage, minimalist music (Reich, Glass)",spheres:["Music","Anthropology","Theatre","Philosophy","Dance","Indonesian culture"],hooks:"Debussy at the World's Fair / Interlocking patterns",ids:{}},
+  {id:"b94",tier:1,title:"Kanō School — Japanese Ink Painting",creator:"Kanō Masanobu and successors, 1450s–1850s",domain:"non-western",era:1500,thesis:"Four centuries of dominant visual tradition in Japan — gold screen, ink painting, and state aesthetics.",G:6,C:6,V:5,I:6,E:7,motifs:["Gold leaf as space","Ink on folding screens","Pine plum bamboo as moral symbols","Deliberate flatness"],parents:"Chinese Song and Ming painting, Zen aesthetics",children:"All subsequent Japanese painting, Japanese graphic design, anime visual conventions",spheres:["Visual Art","Aesthetics","Japanese culture","Diplomacy","Design"],hooks:"Gold screen painting / Japanese aesthetics globally",ids:{}},
+  {id:"b95",tier:1,title:"Hafez — Divan-e Hafez",creator:"Hafez of Shiraz, ~1320–1390",domain:"non-western",era:1360,thesis:"The perfect ghazal — beloved by Goethe, divined like scripture in Iran.",G:7,C:7,V:6,I:7,E:8,motifs:["The wine as divine love","The tavern as sanctuary","The hypocritical preacher","The nightingale and rose"],parents:"Rumi, Sa'di, Sufi tradition, Persian classical poetics",children:"Goethe's West-Eastern Divan, Iranian cultural identity, ghazal tradition in Urdu",spheres:["Poetry","Religion","Culture","Music","Divination","Iranian identity"],hooks:"The tavern of love / Wine of divine grace / Goethe's tribute",ids:{}},
+  {id:"b96",tier:1,title:"Aquinas — Summa Theologica",creator:"Thomas Aquinas, 1265–1274",domain:"philosophy",era:1270,thesis:"The synthesis of Aristotle and Christianity — natural law, the Five Ways.",G:7,C:8,V:6,I:8,E:9,motifs:["The Five Ways","Natural law","Reason and faith as compatible","Grace perfects nature"],parents:"Aristotle, Augustine, Averroes, Peter Lombard",children:"Catholic moral theology, natural law theory, international law, Dante",spheres:["Theology","Philosophy","Law","Politics","Education","Ethics"],hooks:"The Five Ways / Natural law / Reason and faith / The common good",ids:{}},
+  {id:"b97",tier:1,title:"Euripides — Medea & The Bacchae",creator:"Euripides, ~480–406 BCE",domain:"literature",era:-430,thesis:"Women, gods, and irrational forces disrupting the masculine rational order.",G:8,C:8,V:8,I:8,E:9,motifs:["The goddess's wrath","The rationalist confronting the divine","Women as dangerous","The deus ex machina"],parents:"Aeschylus, Sophocles, Athenian religious tradition",children:"Roman drama, all tragedy, opera (Medea especially), feminist literary criticism",spheres:["Literature","Philosophy","Feminism","Theatre","Psychology"],hooks:"Medea / The Bacchae / Women on the verge / The deus ex machina",ids:{}},
+  {id:"b98",tier:1,title:"Egyptian Art Canon — New Kingdom",creator:"Multiple artists, ~1550–1070 BCE",domain:"non-western",era:-1400,thesis:"The oldest continuous artistic tradition — the canon of proportion lasting 3000 years.",G:8,C:8,V:6,I:8,E:8,motifs:["The composite view","The canon of proportion","The afterlife as destination","Hieroglyph as art and language"],parents:"Pre-Dynastic Egyptian culture",children:"Greek Archaic sculpture (Kouros), Western monumental tradition, Egyptomania",spheres:["Visual Art","Architecture","Language","Religion","Archaeology","Cultural history"],hooks:"The pyramid / The sphinx / Tutankhamun / Hieroglyphs",ids:{}},
+  {id:"b99",tier:1,title:"Debussy — Prélude à l'après-midi d'un faune",creator:"Claude Debussy, 1894–1902",domain:"music",era:1894,thesis:"The alternative to German dominance — atmosphere over argument, the whole tone scale.",G:8,C:8,V:7,I:8,E:8,motifs:["The whole tone scale","Atmosphere over structure","The flute as sensual opening","Static harmony"],parents:"Wagner (departing from), Javanese gamelan, Mallarmé, Japanese woodblock",children:"Impressionist music, Ravel, Messiaen, jazz harmony, film scoring texture",spheres:["Music","Poetry","Visual Art","Philosophy","Film"],hooks:"The afternoon of a faun / The whole tone scale",ids:{}},
+  {id:"b100",tier:1,title:"Lévi-Strauss — The Raw and the Cooked",creator:"Claude Lévi-Strauss, 1962–1964",domain:"philosophy",era:1962,thesis:"Myth as structural system — binary oppositions as the deep grammar of all human thought.",G:7,C:8,V:6,I:8,E:8,motifs:["Binary opposition","The raw and the cooked","Myth as code","The bricoleur","Structure beneath narrative"],parents:"Saussure, Jakobson, Durkheim, Mauss",children:"Structuralism, poststructuralism, Derrida, cultural studies, semiotics",spheres:["Anthropology","Philosophy","Literature","Linguistics","Cultural theory"],hooks:"The raw and the cooked / Binary opposition / The bricoleur",ids:{}},
+  {id:"b101",tier:1,title:"Schoenberg — Pierrot Lunaire & Twelve-Tone Works",creator:"Arnold Schoenberg, 1912–1923",domain:"music",era:1912,thesis:"The emancipation of dissonance — twelve-tone serialism ending tonality.",G:7,C:7,V:6,I:8,E:8,motifs:["Atonality","The twelve-tone row","Sprechstimme","Emancipation of dissonance"],parents:"Wagner's chromaticism (pushed to the limit), Brahms, late Romanticism",children:"Webern, Berg, serialist tradition, John Cage, Ligeti, Boulez",spheres:["Music","Philosophy","Mathematics","Education","Cultural theory"],hooks:"Twelve-tone row / Atonality / Emancipation of dissonance",ids:{}},
+  {id:"b102",tier:1,title:"The Simpsons — Seasons 1–10",creator:"Matt Groening & Writers, 1989–1999",domain:"literature",era:1989,thesis:"Postmodern satire as mass medium — the greatest reference engine in television history.",G:9,C:8,V:9,I:8,E:6,motifs:["The nuclear family as satirical unit","Cultural reference as punchline","Irony at mass scale"],parents:"Vaudeville, classic Hollywood, Saturday Night Live, Monty Python",children:"All adult animation, ironic internet culture, modern comedy's reference density",spheres:["Television","Comedy","Cultural studies","American politics","Literature"],hooks:"D'oh / Eat my shorts / Excellent (Mr. Burns)",ids:{}},
+  {id:"b103",tier:1,title:"Super Mario Bros.",creator:"Shigeru Miyamoto, Nintendo, 1985",domain:"non-western",era:1985,thesis:"The grammar of the platformer — jump physics as emotional experience.",G:9,C:8,V:9,I:8,E:6,motifs:["The running jump as joy","The power-up transformation","The princess in another castle","The accessible difficulty curve"],parents:"Atari game design, Pac-Man, earlier arcade structures",children:"Every platformer game, game design's vocabulary of 'feel', Mario as cultural icon",spheres:["Game design","Popular culture","Japanese culture","Technology","Children's media"],hooks:"It's-a me Mario / The coin sound / The princess is in another castle",ids:{}},
+  {id:"b104",tier:1,title:"Bhakti Poetry — Kabir, Mirabai, Tukaram",creator:"Various, 14th–17th century CE",domain:"non-western",era:1450,thesis:"Divine love available to anyone regardless of caste — the most radical democratization of Indian spirituality.",G:7,C:7,V:7,I:7,E:7,motifs:["God as lover","Caste as irrelevant before God","The weaver as holy man (Kabir)","Vernacular as sacred language"],parents:"Alvars and Nayanars, Sufi Islam, Upanishads",children:"Sikhism (Guru Granth Sahib includes Kabir), folk music, Indian Independence movement",spheres:["Religion","Music","Politics","Literature","Social reform","Indian identity"],hooks:"Kabir's dohe / Mirabai's songs / Weaving as prayer",ids:{}},
+  {id:"b105",tier:1,title:"Chekhov — The Short Story & Plays",creator:"Anton Chekhov, 1880–1904",domain:"literature",era:1880,thesis:"The story as slice of life — the epiphany, the loaded detail, the inconclusive ending.",G:8,C:7,V:7,I:7,E:8,motifs:["The loaded detail","The inconclusive ending","Character revealed in a moment","The gun on the mantel"],parents:"Poe's theory, Turgenev, Balzac",children:"Hemingway (iceberg theory), O'Connor, Carver, Alice Munro, the short story as art form",spheres:["Literature","Writing pedagogy","Magazine culture","Film"],hooks:"Chekhov's gun / The Lady with the Dog / Narrative restraint",ids:{}}
+];
+
+// ══════════════════════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════════════════════
+const EDGE_TYPES = {
+  INFLUENCED_BY:{label:"INFLUENCED_BY",dir:"in"},
+  ADAPTATION_OF:{label:"ADAPTATION_OF",dir:"out"},
+  QUOTES:{label:"QUOTES",dir:"out"},
+  TRANSLATION_OF:{label:"TRANSLATION_OF",dir:"out"},
+  SAMPLES:{label:"SAMPLES",dir:"out"},
+  PARODIES:{label:"PARODIES",dir:"out"},
+  SHARES_MOTIF:{label:"SHARES_MOTIF",dir:"both"},
+  SHARES_TECHNIQUE:{label:"SHARES_TECHNIQUE",dir:"both"},
+  TAUGHT_ALONGSIDE:{label:"TAUGHT_ALONGSIDE",dir:"both"},
+};
+const PR_EDGE_TYPES = new Set(["ADAPTATION_OF","QUOTES","TRANSLATION_OF","SAMPLES","PARODIES","INFLUENCED_BY"]);
+const DOMAIN_COLORS = {literature:"#7ab8d4",philosophy:"#9b8ec4",film:"#e07a5f",art:"#e4b363",music:"#6dbf82",myth:"#c49a6c","non-western":"#d4829a"};
+const METRIC_COLORS = {G:"#6dbf82",C:"#e07a5f",V:"#7ab8d4",I:"#c9a84c",E:"#9b8ec4"};
+const WIKIDATA_BASE = "https://www.wikidata.org/wiki/";
+const VIAF_BASE = "https://viaf.org/viaf/";
+const IMDB_BASE = "https://www.imdb.com/title/";
+const LCCN_BASE = "https://id.loc.gov/authorities/names/";
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let customWorks = [];
+let customEdges = [];
+let pageRankScores = {};
+let activeFilter = "all";
+let searchQuery = "";
+let sortMode = "cis";
+let editingId = null;
+let showMotifsInGraph = false;
+let graphNodes = [];
+let graphEdges = [];
+let graphView = {x:0,y:0,scale:1,dragging:false,dragStart:{x:0,y:0},viewStart:{x:0,y:0},selectedNode:null};
+
+// ══════════════════════════════════════════════════════════
+// STORAGE ADAPTER (window.storage when available, else localStorage)
+// ══════════════════════════════════════════════════════════
+const storage = (window.storage &&
+  typeof window.storage.get === "function" &&
+  typeof window.storage.set === "function")
+  ? window.storage
+  : {
+      async get(key) { return { value: localStorage.getItem(key) }; },
+      async set(key, value) { localStorage.setItem(key, value); }
+    };
+
+async function loadData() {
+  try { const r = await storage.get("cpr-custom-works"); if(r?.value) customWorks = JSON.parse(r.value); } catch(e){}
+  try { const r = await storage.get("cpr-custom-edges"); if(r?.value) customEdges = JSON.parse(r.value); } catch(e){}
+  markGraphDirty();
+}
+async function saveWorks() { try { await storage.set("cpr-custom-works", JSON.stringify(customWorks)); } catch(e){} }
+async function saveEdges() { try { await storage.set("cpr-custom-edges", JSON.stringify(customEdges)); } catch(e){} }
+
+// ══════════════════════════════════════════════════════════
+// AUTO-EDGE CACHE
+// ══════════════════════════════════════════════════════════
+let _autoEdgesCache = [];
+let _autoEdgesDirty = true;
+
+function markGraphDirty() { _autoEdgesDirty = true; }
+
+function getAutoEdges() {
+  if (_autoEdgesDirty) {
+    _autoEdgesCache = generateAutoEdges(getAllWorks());
+    _autoEdgesDirty = false;
+  }
+  return _autoEdgesCache;
+}
+
+function getAllEdges() { return [...getAutoEdges(), ...customEdges]; }
+
+// ══════════════════════════════════════════════════════════
+// DATA HELPERS
+// ══════════════════════════════════════════════════════════
+function getAllWorks() {
+  return [
+    ...BUILTIN_WORKS.map(w => ({...w, cis:computeCIS(w), custom:false})),
+    ...customWorks.map(w => ({...w, cis:computeCIS(w), custom:true}))
+  ];
+}
+function computeCIS(w) {
+  return parseFloat(((w.G*1.5) + Math.pow(w.C,1.8) + (w.V*1.2) + (w.I*2.0) + (w.E*1.5)).toFixed(1));
+}
+function getCanonicalId(w) {
+  if(w.ids?.wikidata) return "wd:"+w.ids.wikidata;
+  return w.id;
+}
+
+// ── AUTO-EDGE GENERATION ──────────────────────────────────
+function _norm(s) {
+  return String(s||"").toLowerCase().replace(/\(.*?\)/g," ").replace(/[^a-z0-9]+/g," ").trim();
+}
+
+function generateAutoEdges(works) {
+  const autoEdges = [];
+  const titleToId = new Map();
+  const idSet = new Set();
+  works.forEach(w => { idSet.add(w.id); titleToId.set(_norm(w.title), w.id); });
+  works.forEach(w => {
+    if(!w.parents) return;
+    const tokens = String(w.parents).split(/,|;|\n/).map(s=>s.trim()).filter(Boolean);
+    tokens.forEach(t => {
+      const nt = _norm(t);
+      if(!nt) return;
+      let toId = titleToId.get(nt);
+      if(!toId) {
+        for(const [k,v] of titleToId.entries()) {
+          if(k.length < 8) continue;
+          if(nt.includes(k) || k.includes(nt)) { toId = v; break; }
+        }
+      }
+      if(toId && idSet.has(toId) && toId !== w.id) {
+        autoEdges.push({
+          id:`auto-${w.id}-${toId}-${nt.slice(0,24)}`,
+          type:"INFLUENCED_BY", from:w.id, to:toId,
+          evidence:{kind:"inferred",source:"auto",source_id:"",note:"Derived from parents field: "+t,confidence:0.6},
+          auto:true
+        });
+      }
+    });
+  });
+  return autoEdges;
+}
+
+// ── PAGERANK ─────────────────────────────────────────────
+function runPageRank() {
+  const works = getAllWorks();
+  const allEdges = getAllEdges();
+  const ids = works.map(w => w.id);
+  const N = ids.length;
+  const D = 0.85;
+  let scores = {};
+  ids.forEach(id => scores[id] = 1/N);
+  // Build inbound and outbound for PR-relevant edge types
+  const inbound = {}; const outCount = {};
+  ids.forEach(id => { inbound[id] = []; outCount[id] = 0; });
+  allEdges.forEach(e => {
+    if(!PR_EDGE_TYPES.has(e.type)) return;
+    if(!inbound[e.to]) inbound[e.to] = [];
+    inbound[e.to].push(e.from);
+    outCount[e.from] = (outCount[e.from]||0) + 1;
+  });
+  for(let iter=0;iter<30;iter++) {
+    const ns = {};
+    ids.forEach(id => {
+      let sum = 0;
+      (inbound[id]||[]).forEach(from => sum += (scores[from]||0) / Math.max(1,outCount[from]));
+      ns[id] = (1-D)/N + D*sum;
+    });
+    scores = ns;
+  }
+  // Normalize to 1-10 scale
+  const vals = Object.values(scores);
+  const min = Math.min(...vals); const max = Math.max(...vals);
+  pageRankScores = {};
+  ids.forEach(id => {
+    pageRankScores[id] = max === min ? 5 : Math.round(1 + 9*(scores[id]-min)/(max-min));
+  });
+}
+
+function edgeCountForWork(id) {
+  return getAllEdges().filter(e => e.from === id || e.to === id).length;
+}
+
+// ══════════════════════════════════════════════════════════
+// FILTER / SORT
+// ══════════════════════════════════════════════════════════
+function getFilteredWorks() {
+  let works = getAllWorks();
+  if(activeFilter==="custom") works = works.filter(w=>w.custom);
+  else if(activeFilter!=="all") works = works.filter(w=>w.domain===activeFilter);
+  if(searchQuery) {
+    works = works.filter(w => {
+      const hay = (w.title+" "+w.creator+" "+(w.motifs||[]).join(" ")+" "+(w.thesis||"")).toLowerCase();
+      return hay.includes(searchQuery);
+    });
+  }
+  if(sortMode==="cis") works.sort((a,b)=>b.cis-a.cis);
+  else if(sortMode==="pagerank") works.sort((a,b)=>(pageRankScores[b.id]||0)-(pageRankScores[a.id]||0));
+  else if(sortMode==="edges") works.sort((a,b)=>edgeCountForWork(b.id)-edgeCountForWork(a.id));
+  else if(sortMode==="alpha") works.sort((a,b)=>a.title.localeCompare(b.title));
+  else if(sortMode==="era") works.sort((a,b)=>a.era-b.era);
+  return works;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER CARDS
+// ══════════════════════════════════════════════════════════
+function buildCard(w, workMap) {
+  const div = document.createElement("div");
+  div.className = "work-card"+(w.tier===0?" tier0":"");
+  div.dataset.domain = w.custom ? "" : w.domain;
+  if(w.custom) div.dataset.custom = "true";
+  const prScore = pageRankScores[w.id]||0;
+  const autoI = prScore;
+  const effectiveI = Math.max(w.I, autoI);
+  const bars = ["G","C","V","I","E"].map(k => {
+    const val = k==="I" ? effectiveI : w[k];
+    return `<div class="score-row"><span class="score-key">${k}</span><div class="score-bar-bg"><div class="score-bar-fill" style="width:${(val/10)*100}%;background:${METRIC_COLORS[k]}"></div></div><span class="score-val">${val}</span></div>`;
+  }).join("");
+  const motifs = (w.motifs||[]).slice(0,5).map(m=>`<span class="motif-chip">${m}</span>`).join("");
+  const edgeCount = edgeCountForWork(w.id);
+  const allEdges = getAllEdges().filter(e => e.from === w.id || e.to === w.id);
+  // identifiers
+  const ids = w.ids||{};
+  const idHtml = Object.entries(ids).filter(([k,v])=>v).map(([k,v]) => {
+    let href = v, label = v;
+    if(k==="wikidata") href = WIKIDATA_BASE+v;
+    else if(k==="viaf") href = VIAF_BASE+v;
+    else if(k==="imdb") href = IMDB_BASE+v;
+    else if(k==="lccn") href = LCCN_BASE+v;
+    return `<div class="id-item"><span class="id-key">${k}</span><span class="id-val"><a href="${href}" target="_blank" rel="noopener">${label}</a></span></div>`;
+  }).join("");
+  // edges detail
+  const edgeHtml = allEdges.slice(0,8).map(e => {
+    const isOut = e.from===w.id;
+    const otherId = isOut?e.to:e.from;
+    const otherTitle = workMap[otherId]||otherId;
+    const confColor = (e.evidence?.confidence||0)>0.7?"var(--music)":(e.evidence?.confidence||0)>0.4?"var(--gold)":"var(--danger)";
+    return `<div class="edge-item ${isOut?"out":"in"}">
+      <span class="edge-type-badge">${e.type}${e.auto?" [auto]":""}</span>
+      <span class="edge-target">→ ${otherTitle}</span>
+      <span class="edge-evidence">${e.evidence?.source||"manual"}</span>
+      <span class="edge-conf" style="color:${confColor}">${Math.round((e.evidence?.confidence||0)*10)}/10</span>
+    </div>`;
+  }).join("") || "<div style='font-size:.75rem;color:var(--muted)'>No edges yet. Click \"Add Edge\" to connect this work to others.</div>";
+  const domLabel = {literature:"Literature",philosophy:"Philosophy",film:"Film",art:"Visual Art",music:"Music",myth:"Myth / Religion","non-western":"Non-Western"};
+  div.innerHTML = `
+    <div class="card-top">
+      <div class="card-top-left">
+        <span class="card-domain-tag">${domLabel[w.domain]||w.domain}</span>
+        ${w.custom?'<span class="custom-badge">★ Your addition</span>':""}
+      </div>
+      <div class="cis-block">
+        <div class="cis-score">${Math.round(w.cis)}</div>
+        <div class="cis-label">CIS</div>
+        ${prScore>0?`<div class="cis-auto-badge">PR:${prScore}</div>`:""}
+      </div>
+    </div>
+    <div class="card-title">${w.title}</div>
+    <div class="card-creator">${w.creator}</div>
+    <div class="card-thesis">${w.thesis||""}</div>
+    <div class="score-bars">${bars}</div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+      <div class="motif-row" style="flex:1">${motifs}</div>
+      ${edgeCount>0?`<span class="edge-count-badge">⟶ ${edgeCount}</span>`:""}
+    </div>
+    <div class="card-detail">
+      <div class="detail-section">
+        <div class="detail-label">Lineage (Text)</div>
+        <div class="lineage-row">
+          <div class="lineage-col"><div class="lineage-col-label">↑ Parents</div><div class="lineage-col-content">${w.parents||"—"}</div></div>
+          <div class="lineage-col"><div class="lineage-col-label">↓ Children</div><div class="lineage-col-content">${w.children||"—"}</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Spheres of Influence</div>
+        <div class="sphere-tags">${(w.spheres||[]).map(s=>`<span class="sphere-tag">${s}</span>`).join("")||"—"}</div>
+      </div>
+      <div class="detail-section"><div class="detail-label">Key Reference Hooks</div><div class="detail-text">${w.hooks||"—"}</div></div>
+      ${idHtml?`<div class="detail-section"><div class="detail-label">Authority Identifiers</div><div class="ids-grid">${idHtml}</div></div>`:""}
+      <div class="detail-section"><div class="detail-label">Graph Edges (${allEdges.length})</div><div class="edges-list">${edgeHtml}</div></div>
+      ${w.custom?`<div class="card-actions"><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editWork('${w.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteWork('${w.id}')">Delete</button><button class="btn btn-graph btn-sm" onclick="event.stopPropagation();openEdgeModalFor('${w.id}')">Add Edge</button></div>`:`<div class="card-actions"><button class="btn btn-graph btn-sm" onclick="event.stopPropagation();openEdgeModalFor('${w.id}')">Add Edge</button></div>`}
+    </div>`;
+  div.addEventListener("click", e => { if(!e.target.closest("button") && !e.target.closest("a")) div.querySelector(".card-detail").classList.toggle("open"); });
+  return div;
+}
+
+function updateStats() {
+  const all = getAllWorks();
+  const autoE = getAutoEdges();
+  document.getElementById("statTotal").textContent = all.length;
+  document.getElementById("statCustom").textContent = customWorks.length;
+  document.getElementById("statEdges").textContent = autoE.length + customEdges.length;
+  const motifSet = new Set(all.flatMap(w=>w.motifs||[]));
+  document.getElementById("statMotifs").textContent = motifSet.size;
+  document.getElementById("statTopScore").textContent = Math.round(Math.max(...all.map(w=>w.cis)));
+  const prDone = Object.keys(pageRankScores).length;
+  document.getElementById("statPRDone").textContent = prDone > 0 ? "✓ "+prDone+" scored" : "Pending";
+  const cf = document.getElementById("customFilterBtn");
+  cf.style.display = customWorks.length > 0 ? "" : "none";
+  if(customWorks.length>0) cf.textContent = "★ Added ("+customWorks.length+")";
+}
+
+function renderCards() {
+  const grid = document.getElementById("cardsGrid");
+  grid.innerHTML = "";
+  const works = getFilteredWorks();
+  document.getElementById("countDisplay").textContent = works.length+" of "+getAllWorks().length+" works";
+  const workMap = Object.fromEntries(getAllWorks().map(w => [w.id, w.title]));
+  works.forEach(w => grid.appendChild(buildCard(w, workMap)));
+}
+
+function renderTable() {
+  const works = getFilteredWorks();
+  const workMap = {}; getAllWorks().forEach(w=>workMap[w.id]=w);
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = works.map(w => {
+    const ec = edgeCountForWork(w.id);
+    const prR = pageRankScores[w.id]||"—";
+    const wd = w.ids?.wikidata||"";
+    return `<tr>
+      <td><strong>${w.title}</strong></td>
+      <td>${w.creator}</td>
+      <td class="td-domain" style="color:${DOMAIN_COLORS[w.domain]||"#ccc"}">${w.domain}</td>
+      <td class="td-era">${w.era>0?w.era:Math.abs(w.era)+" BCE"}</td>
+      <td class="td-cis">${Math.round(w.cis)}</td>
+      <td>${w.G}</td><td>${w.C}</td><td>${w.V}</td><td>${w.I}</td><td>${w.E}</td>
+      <td class="td-edges">${ec>0?ec:"—"}</td>
+      <td class="td-edges">${prR}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:.45rem;color:var(--motif)">${wd?`<a href="${WIKIDATA_BASE+wd}" target="_blank" style="color:var(--motif)">${wd}</a>`:""}</td>
+    </tr>`;
+  }).join("");
+}
+
+function render() {
+  runPageRank();
+  updateStats();
+  const activeView = document.querySelector(".tab-btn.active").dataset.view;
+  if(activeView==="cards") renderCards();
+  else if(activeView==="table") renderTable();
+  else if(activeView==="graph") renderGraph();
+}
+
+// ══════════════════════════════════════════════════════════
+// GRAPH CANVAS
+// ══════════════════════════════════════════════════════════
+function buildGraphData() {
+  const works = getAllWorks();
+  const allEdges = getAllEdges();
+  const nodes = works.map(w => ({
+    id: w.id, label: w.title.length>30?w.title.slice(0,28)+"…":w.title, domain: w.domain,
+    cis: w.cis, pr: pageRankScores[w.id]||1, type:"work",
+    x: Math.random()*800, y: Math.random()*600
+  }));
+  if(showMotifsInGraph) {
+    const motifMap = {};
+    works.forEach(w=>{
+      (w.motifs||[]).forEach(m=>{
+        const slug = "motif:"+m.toLowerCase().replace(/\s+/g,"-");
+        if(!motifMap[slug]) motifMap[slug]={id:slug,label:m,type:"motif",x:Math.random()*800,y:Math.random()*600};
+      });
+    });
+    Object.values(motifMap).forEach(n=>nodes.push(n));
+    works.forEach(w=>{
+      (w.motifs||[]).forEach(m=>{
+        const slug="motif:"+m.toLowerCase().replace(/\s+/g,"-");
+        allEdges.push({id:"motif-"+w.id+"-"+slug,type:"SHARES_MOTIF",from:w.id,to:slug,evidence:{kind:"inferred",confidence:0.9},auto:true});
+      });
+    });
+  }
+  return {nodes, edges: allEdges};
+}
+
+function forceLayout(nodes, edges, iterations=80) {
+  const idxMap = {};
+  nodes.forEach((n,i)=>{idxMap[n.id]=i;});
+  const W=800,H=600;
+  for(let iter=0;iter<iterations;iter++) {
+    // Repulsion
+    for(let i=0;i<nodes.length;i++) {
+      let fx=0,fy=0;
+      for(let j=0;j<nodes.length;j++) {
+        if(i===j) continue;
+        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+        const d2=dx*dx+dy*dy+1;
+        const f=2000/d2;
+        fx+=f*dx; fy+=f*dy;
+      }
+      nodes[i].x+=fx; nodes[i].y+=fy;
+    }
+    // Attraction along edges
+    edges.forEach(e=>{
+      const si=idxMap[e.from], ti=idxMap[e.to];
+      if(si==null||ti==null) return;
+      const dx=nodes[ti].x-nodes[si].x, dy=nodes[ti].y-nodes[si].y;
+      const d=Math.sqrt(dx*dx+dy*dy)+0.01;
+      const f=(d-80)*0.04;
+      const nx=dx/d*f, ny=dy/d*f;
+      nodes[si].x+=nx; nodes[si].y+=ny;
+      nodes[ti].x-=nx; nodes[ti].y-=ny;
+    });
+    // Gravity center
+    nodes.forEach(n=>{n.x+=(W/2-n.x)*0.02; n.y+=(H/2-n.y)*0.02;});
+  }
+}
+
+function renderGraph() {
+  const canvas = document.getElementById("graphCanvas");
+  const gd = buildGraphData();
+  graphNodes = gd.nodes; graphEdges = gd.edges;
+  forceLayout(graphNodes, graphEdges);
+  drawGraph();
+}
+
+function drawGraph() {
+  const canvas = document.getElementById("graphCanvas");
+  const ctx = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width; canvas.height = rect.height;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(graphView.x,graphView.y);
+  ctx.scale(graphView.scale,graphView.scale);
+  // Draw edges
+  graphEdges.slice(0,300).forEach(e=>{
+    const s = graphNodes.find(n=>n.id===e.from);
+    const t = graphNodes.find(n=>n.id===e.to);
+    if(!s||!t) return;
+    ctx.beginPath();
+    ctx.moveTo(s.x,s.y);
+    ctx.lineTo(t.x,t.y);
+    ctx.strokeStyle = "rgba(100,90,70,0.18)";
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  });
+  // Draw nodes
+  graphNodes.forEach(n => {
+    const r = n.type==="motif" ? 4 : Math.max(5, Math.min(20, (n.cis||50)/10));
+    ctx.beginPath();
+    ctx.arc(n.x,n.y,r,0,Math.PI*2);
+    ctx.fillStyle = n.type==="motif" ? "rgba(142,207,201,0.6)" : (DOMAIN_COLORS[n.domain]||"#888");
+    ctx.globalAlpha = n===graphView.selectedNode ? 1 : 0.7;
+    ctx.fill();
+    if(r>8 || n===graphView.selectedNode) {
+      ctx.fillStyle = "#e8e0ce";
+      ctx.globalAlpha = 0.85;
+      ctx.font = `${Math.min(10,r+2)}px 'Space Mono',monospace`;
+      ctx.fillText(n.label.slice(0,22), n.x+r+2, n.y+3);
+    }
+    ctx.globalAlpha = 1;
+  });
+  ctx.restore();
+}
+
+// Graph canvas interactions
+const canvas = document.getElementById("graphCanvas");
+canvas.addEventListener("mousedown", e => {
+  graphView.dragging=true;
+  graphView.dragStart={x:e.clientX,y:e.clientY};
+  graphView.viewStart={x:graphView.x,y:graphView.y};
+});
+canvas.addEventListener("mousemove", e => {
+  if(graphView.dragging){
+    graphView.x=graphView.viewStart.x+(e.clientX-graphView.dragStart.x);
+    graphView.y=graphView.viewStart.y+(e.clientY-graphView.dragStart.y);
+    drawGraph();
+  }
+  // Tooltip
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left-graphView.x)/graphView.scale;
+  const my=(e.clientY-rect.top-graphView.y)/graphView.scale;
+  const hit=graphNodes.find(n=>{const dx=n.x-mx,dy=n.y-my;return Math.sqrt(dx*dx+dy*dy)<(n.type==="motif"?6:12);});
+  const tt=document.getElementById("graphTooltip");
+  if(hit){
+    tt.style.display="block";tt.style.left=(e.clientX-rect.left+10)+"px";tt.style.top=(e.clientY-rect.top+10)+"px";
+    tt.textContent=hit.type==="motif"?"Motif: "+hit.label:hit.label+(hit.cis?` (CIS ${Math.round(hit.cis)})`:"");
+  } else { tt.style.display="none"; }
+});
+canvas.addEventListener("mouseup",()=>graphView.dragging=false);
+canvas.addEventListener("wheel",e=>{
+  e.preventDefault();
+  const factor=e.deltaY<0?1.1:0.91;
+  graphView.scale=Math.max(0.2,Math.min(4,graphView.scale*factor));
+  drawGraph();
+},{passive:false});
+
+document.getElementById("btnRelayout").addEventListener("click",()=>{ forceLayout(graphNodes,graphEdges); drawGraph(); });
+document.getElementById("btnWorksOnly").addEventListener("click",()=>{ showMotifsInGraph=false; renderGraph(); });
+document.getElementById("btnShowMotifs").addEventListener("click",()=>{ showMotifsInGraph=true; renderGraph(); });
+
+// ══════════════════════════════════════════════════════════
+// MODAL: WORK
+// ══════════════════════════════════════════════════════════
+function computePreviewCIS() {
+  const G=+document.getElementById("sl-G").value,C=+document.getElementById("sl-C").value;
+  const V=+document.getElementById("sl-V").value,I=+document.getElementById("sl-I").value;
+  const E=+document.getElementById("sl-E").value;
+  document.getElementById("cisPreview").textContent = Math.round((G*1.5)+Math.pow(C,1.8)+(V*1.2)+(I*2.0)+(E*1.5));
+}
+["G","C","V","I","E"].forEach(k=>{
+  document.getElementById("sl-"+k).addEventListener("input",()=>{
+    document.getElementById("sv-"+k).textContent=document.getElementById("sl-"+k).value;
+    computePreviewCIS();
+  });
+});
+computePreviewCIS();
+
+function resetWorkForm() {
+  ["title","creator","thesis","motifs","hooks","parents","children","spheres","wikidata","viaf","lccn","imdb","musicbrainz","getty_aat"].forEach(f=>{
+    const el=document.getElementById("f-"+f);if(el)el.value="";
+  });
+  document.getElementById("f-domain").value="literature";
+  document.getElementById("f-tier").value="2";
+  document.getElementById("f-era").value="";
+  ["G","C","V","I","E"].forEach(k=>{document.getElementById("sl-"+k).value=7;document.getElementById("sv-"+k).textContent=7;});
+  computePreviewCIS();
+  editingId=null;
+  document.getElementById("modalTitle").innerHTML='Add <span>Work</span>';
+  document.getElementById("saveWork").textContent="Save Work to Database";
+}
+function openAddModal() { resetWorkForm(); document.getElementById("addModal").classList.add("open"); }
+function closeAddModal() { document.getElementById("addModal").classList.remove("open"); }
+document.getElementById("addWorkBtn").addEventListener("click",openAddModal);
+document.getElementById("closeModal").addEventListener("click",closeAddModal);
+document.getElementById("cancelModal").addEventListener("click",closeAddModal);
+document.getElementById("addModal").addEventListener("click",e=>{if(e.target===document.getElementById("addModal"))closeAddModal();});
+
+document.getElementById("saveWork").addEventListener("click", async () => {
+  const title=document.getElementById("f-title").value.trim();
+  const creator=document.getElementById("f-creator").value.trim();
+  if(!title||!creator){showToast("Title and creator are required","error");return;}
+  const motifs=document.getElementById("f-motifs").value;
+  const spheres=document.getElementById("f-spheres").value;
+  const ids={};
+  ["wikidata","viaf","lccn","imdb","musicbrainz","getty_aat"].forEach(k=>{
+    const v=document.getElementById("f-"+k)?.value?.trim()||"";
+    if(v) ids[k]=v;
+  });
+  const workData={title,creator,
+    domain:document.getElementById("f-domain").value,
+    era:parseInt(document.getElementById("f-era").value)||0,
+    tier:parseInt(document.getElementById("f-tier").value),
+    thesis:document.getElementById("f-thesis").value.trim(),
+    motifs:motifs?motifs.split(",").map(s=>s.trim()).filter(Boolean):[],
+    hooks:document.getElementById("f-hooks").value.trim(),
+    parents:document.getElementById("f-parents").value.trim(),
+    children:document.getElementById("f-children").value.trim(),
+    spheres:spheres?spheres.split(",").map(s=>s.trim()).filter(Boolean):[],
+    G:+document.getElementById("sl-G").value,C:+document.getElementById("sl-C").value,
+    V:+document.getElementById("sl-V").value,I:+document.getElementById("sl-I").value,
+    E:+document.getElementById("sl-E").value, ids
+  };
+  if(editingId) {
+    const idx=customWorks.findIndex(w=>w.id===editingId);
+    if(idx>=0) customWorks[idx]={...customWorks[idx],...workData};
+    showToast("Updated: "+title,"success");
+  } else {
+    workData.id="custom-"+Date.now();workData.addedAt=Date.now();
+    customWorks.push(workData);
+    showToast("Added: "+title,"success");
+  }
+  await saveWorks();
+  closeAddModal();
+  render();
+});
+
+function editWork(id) {
+  const w=customWorks.find(w=>w.id===id);if(!w)return;
+  editingId=id;
+  ["title","creator","thesis","hooks","parents","children"].forEach(f=>{const el=document.getElementById("f-"+f);if(el)el.value=w[f]||"";});
+  document.getElementById("f-motifs").value=(w.motifs||[]).join(", ");
+  document.getElementById("f-spheres").value=(w.spheres||[]).join(", ");
+  document.getElementById("f-domain").value=w.domain||"literature";
+  document.getElementById("f-era").value=w.era||"";
+  document.getElementById("f-tier").value=w.tier||2;
+  ["G","C","V","I","E"].forEach(k=>{document.getElementById("sl-"+k).value=w[k]||7;document.getElementById("sv-"+k).textContent=w[k]||7;});
+  const ids=w.ids||{};
+  ["wikidata","viaf","lccn","imdb","musicbrainz","getty_aat"].forEach(k=>{const el=document.getElementById("f-"+k);if(el)el.value=ids[k]||"";});
+  computePreviewCIS();
+  document.getElementById("modalTitle").innerHTML='Edit <span>Work</span>';
+  document.getElementById("saveWork").textContent="Update Work";
+  document.getElementById("addModal").classList.add("open");
+}
+
+async function deleteWork(id) {
+  if(!confirm("Remove this work from your database?")) return;
+  customWorks=customWorks.filter(w=>w.id!==id);
+  customEdges=customEdges.filter(e=>e.from!==id&&e.to!==id);
+  await saveWorks();await saveEdges();
+  markGraphDirty();
+  render();showToast("Work removed","success");
+}
+
+// ══════════════════════════════════════════════════════════
+// MODAL: EDGE
+// ══════════════════════════════════════════════════════════
+function openEdgeModal() { document.getElementById("edgeModal").classList.add("open"); }
+function closeEdgeModal() { document.getElementById("edgeModal").classList.remove("open"); document.getElementById("e-from-id").value=""; document.getElementById("e-to-id").value=""; document.getElementById("e-from-search").value=""; document.getElementById("e-to-search").value=""; }
+document.getElementById("addEdgeBtn").addEventListener("click",openEdgeModal);
+document.getElementById("closeEdgeModal").addEventListener("click",closeEdgeModal);
+document.getElementById("cancelEdgeModal").addEventListener("click",closeEdgeModal);
+document.getElementById("edgeModal").addEventListener("click",e=>{if(e.target===document.getElementById("edgeModal"))closeEdgeModal();});
+
+function openEdgeModalFor(fromId) {
+  openEdgeModal();
+  const w=getAllWorks().find(w=>w.id===fromId);
+  if(w){document.getElementById("e-from-id").value=fromId;document.getElementById("e-from-search").value=w.title;}
+}
+
+// Edge search
+function setupEdgeSearch(inputId, hiddenId, resultsId) {
+  const inp=document.getElementById(inputId);
+  const res=document.getElementById(resultsId);
+  inp.addEventListener("input", () => {
+    const q=inp.value.toLowerCase().trim();
+    if(!q){res.style.display="none";return;}
+    const matches=getAllWorks().filter(w=>w.title.toLowerCase().includes(q)||w.creator.toLowerCase().includes(q)).slice(0,8);
+    res.innerHTML=matches.map(w=>`<div class="edge-search-result" data-id="${w.id}" data-title="${w.title}">${w.title} <span style="color:var(--muted);font-size:.75rem">(${w.creator.slice(0,30)})</span></div>`).join("");
+    res.style.display=matches.length>0?"block":"none";
+    res.querySelectorAll(".edge-search-result").forEach(el=>{
+      el.addEventListener("click",()=>{
+        document.getElementById(hiddenId).value=el.dataset.id;
+        inp.value=el.dataset.title;
+        res.style.display="none";
+      });
+    });
+  });
+}
+setupEdgeSearch("e-from-search","e-from-id","e-from-results");
+setupEdgeSearch("e-to-search","e-to-id","e-to-results");
+document.getElementById("e-conf").addEventListener("input",()=>{
+  document.getElementById("e-conf-val").textContent=(+document.getElementById("e-conf").value/10).toFixed(1);
+});
+
+document.getElementById("saveEdge").addEventListener("click", async () => {
+  const fromId=document.getElementById("e-from-id").value;
+  const toId=document.getElementById("e-to-id").value;
+  if(!fromId||!toId){showToast("Select both source and target works","error");return;}
+  if(fromId===toId){showToast("Source and target cannot be the same","error");return;}
+  const edge={
+    id:"edge-"+Date.now()+"-"+Math.random().toString(36).slice(2),
+    type:document.getElementById("e-type").value,
+    from:fromId,to:toId,
+    evidence:{
+      kind:document.getElementById("e-kind").value,
+      source:document.getElementById("e-source").value,
+      source_id:document.getElementById("e-source-id").value.trim(),
+      note:document.getElementById("e-note").value.trim(),
+      confidence:+document.getElementById("e-conf").value/10
+    }
+  };
+  customEdges.push(edge);
+  await saveEdges();
+  markGraphDirty();
+  closeEdgeModal();
+  render();
+  showToast("Edge saved: "+edge.type,"success");
+});
+
+// ══════════════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════════════════════════
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const all=getAllWorks();
+  const autoEdges=getAutoEdges();
+  const payload={
+    version:"2.1",
+    exportedAt:new Date().toISOString(),
+    formula:"CIS = (G×1.5) + (C^1.8) + (V×1.2) + (I×2.0) + (E×1.5)",
+    schema:{G:"Generativity (1-10)",C:"Cross-Domain Reach (1-10)",V:"Temporal Velocity (1-10)",I:"Intertextual Centrality (1-10)",E:"Institutional Embedding (1-10)"},
+    graph:{
+      nodeCount:all.length,
+      edgeCount:autoEdges.length+customEdges.length,
+      autoEdgeCount:autoEdges.length,
+      manualEdgeCount:customEdges.length,
+      nodes:all.map(w=>({...w, cisScore:w.cis, pageRankScore:pageRankScores[w.id]||null, canonicalId:getCanonicalId(w)})),
+      edges:[...autoEdges,...customEdges]
+    },
+    customWorks,
+    customEdges
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;
+  a.download="cultural-pagerank-v2.1-"+new Date().toISOString().split("T")[0]+".json";
+  a.click();URL.revokeObjectURL(url);
+  showToast("Exported graph payload (v2.1)","success");
+});
+
+document.getElementById("importInput").addEventListener("change", async e => {
+  const file=e.target.files[0];if(!file)return;
+  try {
+    const text=await file.text();
+    const data=JSON.parse(text);
+    let toImportWorks=[], toImportEdges=[];
+    // v2.1 format
+    if(data.customWorks) toImportWorks=data.customWorks;
+    else if(data.graph?.nodes) toImportWorks=data.graph.nodes.filter(n=>!BUILTIN_WORKS.find(b=>b.id===n.id));
+    else if(Array.isArray(data)) toImportWorks=data;
+    else if(data.works) toImportWorks=data.works;
+    if(data.customEdges) toImportEdges=data.customEdges;
+    else if(data.graph?.edges) toImportEdges=data.graph.edges.filter(e=>!e.auto);
+    // Merge works — dedupe by wikidata first, then title
+    const existingWikidata=new Set([...BUILTIN_WORKS,...customWorks].filter(w=>w.ids?.wikidata).map(w=>w.ids.wikidata));
+    const existingTitles=new Set([...BUILTIN_WORKS,...customWorks].map(w=>w.title.toLowerCase()));
+    let wAdded=0,wSkipped=0;
+    toImportWorks.forEach(w=>{
+      if(!w.title||!w.creator){wSkipped++;return;}
+      if(w.ids?.wikidata&&existingWikidata.has(w.ids.wikidata)){wSkipped++;return;}
+      if(existingTitles.has(w.title.toLowerCase())){wSkipped++;return;}
+      const clean={
+        id:w.id||("custom-"+Date.now()+"-"+Math.random().toString(36).slice(2)),
+        title:w.title,creator:w.creator,domain:w.domain||"literature",era:w.era||0,tier:w.tier||2,
+        thesis:w.thesis||"",motifs:Array.isArray(w.motifs)?w.motifs:[],
+        hooks:w.hooks||"",parents:w.parents||"",children:w.children||"",
+        spheres:Array.isArray(w.spheres)?w.spheres:[],
+        G:Math.min(10,Math.max(1,+w.G||7)),C:Math.min(10,Math.max(1,+w.C||7)),
+        V:Math.min(10,Math.max(1,+w.V||7)),I:Math.min(10,Math.max(1,+w.I||7)),
+        E:Math.min(10,Math.max(1,+w.E||7)),
+        ids:w.ids||{},addedAt:w.addedAt||Date.now()
+      };
+      customWorks.push(clean);
+      existingTitles.add(clean.title.toLowerCase());
+      if(clean.ids?.wikidata) existingWikidata.add(clean.ids.wikidata);
+      wAdded++;
+    });
+    // Merge edges — dedupe by id
+    const existingEdgeIds=new Set(customEdges.map(e=>e.id));
+    let eAdded=0;
+    toImportEdges.forEach(e=>{
+      if(!e.id||!e.from||!e.to||!e.type)return;
+      if(existingEdgeIds.has(e.id))return;
+      customEdges.push(e);existingEdgeIds.add(e.id);eAdded++;
+    });
+    await saveWorks();await saveEdges();
+    render();
+    showToast(`Imported ${wAdded} works${wSkipped>0?` (${wSkipped} dupes skipped)`:""}, ${eAdded} edges`,"success");
+  } catch(err) { showToast("Import failed — check JSON format","error"); }
+  e.target.value="";
+});
+
+// ══════════════════════════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════════════════════════
+document.querySelectorAll(".filter-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active"); activeFilter=btn.dataset.f; render();
+  });
+});
+document.getElementById("searchInput").addEventListener("input",e=>{searchQuery=e.target.value.toLowerCase().trim();render();});
+document.getElementById("sortSelect").addEventListener("change",e=>{sortMode=e.target.value;render();});
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".view-section").forEach(s=>s.classList.remove("active"));
+    document.getElementById("view-"+btn.dataset.view).classList.add("active");
+    if(btn.dataset.view==="graph") renderGraph();
+    else if(btn.dataset.view==="table") renderTable();
+    else if(btn.dataset.view==="formula") buildFormulaView();
+  });
+});
+
+// ══════════════════════════════════════════════════════════
+// FORMULA VIEW
+// ══════════════════════════════════════════════════════════
+function buildFormulaView() {
+  const el=document.getElementById("edgeTypeList");
+  el.innerHTML=Object.entries(EDGE_TYPES).map(([k,v])=>`
+    <div style="border:1px solid var(--border);padding:.7rem .9rem;background:var(--surface)">
+      <div style="font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:.1em;color:${PR_EDGE_TYPES.has(k)?"var(--gold)":"var(--motif)"};margin-bottom:.2rem">${k} ${PR_EDGE_TYPES.has(k)?"★ PR":"○"}</div>
+      <div style="font-size:.8rem;color:var(--muted)">Contributes to PageRank computation: ${PR_EDGE_TYPES.has(k)?"Yes":"No"}</div>
+    </div>`).join("");
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+function showToast(msg,type="success") {
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.className="toast "+type+" show";
+  setTimeout(()=>t.classList.remove("show"),3500);
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+loadData().then(()=>render());
+</script>
+</body>
+</html>
